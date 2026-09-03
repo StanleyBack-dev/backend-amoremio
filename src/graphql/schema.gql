@@ -1,0 +1,1382 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type LogoutResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+}
+
+type AuthUserDto {
+  idUsers: String!
+  name: String!
+  email: String!
+  username: String!
+  group: UserGroup!
+  status: Boolean!
+  urlAvatar: String
+}
+
+enum UserGroup {
+  USER
+  ADMIN
+  ADMIN_MASTER
+}
+
+type AuthSessionResponseDto {
+  authenticated: Boolean!
+  mustChangePassword: Boolean!
+  onboardingTourCompleted: Boolean!
+  termsAccepted: Boolean!
+  isTermsReacceptance: Boolean!
+  user: AuthUserDto!
+}
+
+type VerifyPasswordRecoveryCodeResponseDto {
+  recoveryToken: String!
+  expiresAt: DateTime!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type VerifyPasswordRecoveryCodeMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: VerifyPasswordRecoveryCodeResponseDto!
+}
+
+type GroupDefaultDto {
+  group: UserGroup!
+  defaultPermissions: [PageAccessKey!]!
+}
+
+enum PageAccessKey {
+  DASHBOARD
+  DEBTS
+  DEBTS_STATEMENT
+  INCOMES
+  PAYMENTS
+  INCOME_RECEIPTS
+  CREDIT_CARDS
+  ADMIN
+}
+
+type PageAccessMetadataResponseDto {
+  allKeys: [PageAccessKey!]!
+  groupDefaults: [GroupDefaultDto!]!
+}
+
+type StoreResponseDto {
+  idStore: String!
+  name: String!
+  legalName: String
+  cnpj: String
+  whatsapp: String
+  email: String
+  instagram: String
+  ifoodUrl: String
+  food99Url: String
+  status: Boolean!
+  createdByUserId: String!
+  role: StoreRole
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum StoreRole {
+  DONO
+  GERENTE
+  FUNCIONARIO
+}
+
+type StoreMemberResponseDto {
+  idStoreMembership: String!
+  idStore: String!
+  idUsers: String!
+  name: String!
+  email: String!
+  username: String
+  role: StoreRole!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type StoreMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: StoreResponseDto!
+}
+
+type BrandResponseDto {
+  idBrand: String!
+  idStore: String!
+  name: String!
+  status: Boolean!
+  createdByUserId: String!
+  createdByUserName: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type UserOptionDto {
+  id: String!
+  name: String!
+}
+
+type BrandFilterOptionsDto {
+  names: [String!]!
+  creators: [UserOptionDto!]!
+}
+
+type ListBrandsResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  items: [BrandResponseDto!]!
+  total: Int!
+  currentPage: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+}
+
+type BrandMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: BrandResponseDto!
+}
+
+type ProductResponseDto {
+  idProduct: String!
+  idStore: String!
+  name: String!
+  sku: String
+  description: String
+  brand: String
+  kind: ProductKind!
+  unit: UnitOfMeasure!
+  packagingUnit: PackagingUnit!
+  packSize: Float!
+  salePrice: Float
+  status: Boolean!
+  createdByUserId: String!
+  createdByUserName: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum ProductKind {
+  INSUMO
+  PRODUTO_FINAL
+  REVENDA
+  INTERMEDIARIO
+}
+
+enum UnitOfMeasure {
+  UN
+  KG
+  G
+  L
+  ML
+  CX
+  FARDO
+  PACOTE
+  DUZIA
+}
+
+enum PackagingUnit {
+  UNIDADE
+  PACOTE
+  CAIXA
+  FARDO
+  SACO
+  GARRAFA
+  LATA
+  POTE
+  DUZIA
+  BANDEJA
+}
+
+type ProductFilterOptionsDto {
+  names: [String!]!
+  brands: [String!]!
+  creators: [UserOptionDto!]!
+}
+
+type ListProductsResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  items: [ProductResponseDto!]!
+  total: Int!
+  currentPage: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+}
+
+type ProductMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: ProductResponseDto!
+}
+
+type SuccessResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+}
+
+type StockItemResponseDto {
+  idProduct: String!
+  idStore: String!
+  productName: String!
+  sku: String
+  brand: String
+  kind: ProductKind!
+  status: Boolean!
+  unit: UnitOfMeasure!
+  quantityOnHand: Float!
+  averageCost: Float!
+  stockValue: Float!
+  reorderPoint: Float
+  updatedAt: DateTime
+}
+
+type StockMovementResponseDto {
+  idStockMovement: String!
+  idStore: String!
+  idProduct: String!
+  productName: String!
+  unit: UnitOfMeasure!
+  type: StockMovementType!
+  quantity: Float!
+  unitCost: Float!
+  resultingQuantity: Float!
+  resultingAverageCost: Float!
+  sourceType: String
+  sourceId: String
+  note: String
+  occurredAt: DateTime!
+}
+
+enum StockMovementType {
+  ENTRADA_COMPRA
+  SAIDA_VENDA
+  SAIDA_PRODUCAO
+  ENTRADA_PRODUCAO
+  AJUSTE_POSITIVO
+  AJUSTE_NEGATIVO
+  PERDA
+}
+
+type ListStoreStockResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  items: [StockItemResponseDto!]!
+  total: Int!
+  currentPage: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+  stockValueTotal: Float!
+}
+
+type ListStockMovementsResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  items: [StockMovementResponseDto!]!
+  total: Int!
+  currentPage: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+}
+
+type DashboardTotalsDto {
+  totalPurchases: Float!
+  totalSales: Float!
+  totalCommission: Float!
+  netSales: Float!
+  costOfGoodsSold: Float!
+  grossMargin: Float!
+  grossMarginPercent: Float!
+  purchaseCount: Int!
+  salesCount: Int!
+}
+
+type SalesChannelDto {
+  channel: String!
+  orderCount: Int!
+  grossSales: Float!
+  commission: Float!
+  netSales: Float!
+}
+
+type TopProductDto {
+  idProduct: String!
+  productName: String!
+  quantitySold: Float!
+  revenue: Float!
+}
+
+type ProductProfitabilityDto {
+  idProduct: String!
+  productName: String!
+  quantitySold: Float!
+  revenue: Float!
+  cost: Float!
+  grossProfit: Float!
+  commission: Float!
+  netProfit: Float!
+  marginPercent: Float!
+}
+
+type MonthlyPointDto {
+  month: String!
+  purchases: Float!
+  sales: Float!
+}
+
+type FinanceDashboardResponseDto {
+  from: DateTime!
+  to: DateTime!
+  totals: DashboardTotalsDto!
+  stockValue: Float!
+  topProducts: [TopProductDto!]!
+  productProfitability: [ProductProfitabilityDto!]!
+  monthlySeries: [MonthlyPointDto!]!
+  salesByChannel: [SalesChannelDto!]!
+}
+
+type TermsAcceptanceStatusResponseDto {
+  accepted: Boolean!
+  acceptedAt: DateTime
+  termsVersion: String
+}
+
+type RecipeItemResponseDto {
+  idRecipeItem: String!
+  idProduct: String!
+  productName: String!
+  quantity: Float!
+  unit: String!
+}
+
+type RecipeResponseDto {
+  idRecipe: String!
+  idStore: String!
+  idOutputProduct: String!
+  outputProductName: String!
+  name: String!
+  yieldQuantity: Float!
+  yieldUnit: String!
+  laborCost: Float!
+  overheadCost: Float!
+  status: Boolean!
+  notes: String
+  createdByUserId: String!
+  createdByUserName: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  items: [RecipeItemResponseDto!]!
+}
+
+type ProductionOrderItemResponseDto {
+  idProductionOrderItem: String!
+  idProduct: String!
+  productName: String!
+  quantity: Float!
+  unit: String!
+  unitCostAtConsumption: Float!
+  lineCost: Float!
+}
+
+type ProductionOrderResponseDto {
+  idProductionOrder: String!
+  idStore: String!
+  idRecipe: String!
+  recipeName: String!
+  idOutputProduct: String!
+  outputProductName: String!
+  productionDate: DateTime!
+  status: ProductionOrderStatus!
+  batches: Float!
+  plannedOutputQuantity: Float!
+  actualOutputQuantity: Float!
+  laborCost: Float!
+  overheadCost: Float!
+  inputsCost: Float!
+  totalCost: Float!
+  outputUnitCost: Float!
+  notes: String
+  createdByUserId: String!
+  createdByUserName: String
+  concludedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  items: [ProductionOrderItemResponseDto!]!
+}
+
+enum ProductionOrderStatus {
+  RASCUNHO
+  CONCLUIDA
+  CANCELADA
+}
+
+type ProductionOrderFilterOptionsDto {
+  recipes: [UserOptionDto!]!
+  creators: [UserOptionDto!]!
+}
+
+type ListRecipesResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  items: [RecipeResponseDto!]!
+  total: Int!
+  currentPage: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+}
+
+type RecipeMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: RecipeResponseDto!
+}
+
+type ListProductionOrdersResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  items: [ProductionOrderResponseDto!]!
+  total: Int!
+  currentPage: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+}
+
+type ProductionOrderMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: ProductionOrderResponseDto!
+}
+
+type PurchaseItemResponseDto {
+  idPurchaseItem: String!
+  idProduct: String!
+  productName: String!
+  purchasedQuantity: Float!
+  purchasedUnit: String!
+  conversionFactor: Float!
+  unitPrice: Float!
+  lineTotal: Float!
+  baseQuantity: Float!
+  effectiveUnitCost: Float!
+}
+
+type PurchaseResponseDto {
+  idPurchase: String!
+  idStore: String!
+  supplierName: String
+  purchaseDate: DateTime!
+  status: PurchaseStatus!
+  freightAmount: Float!
+  discountAmount: Float!
+  discountMode: PurchaseDiscountMode!
+  discountPercent: Float!
+  itemsSubtotal: Float!
+  total: Float!
+  notes: String
+  createdByUserId: String!
+  createdByUserName: String
+  finalizedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  items: [PurchaseItemResponseDto!]!
+}
+
+enum PurchaseStatus {
+  RASCUNHO
+  FINALIZADA
+  CANCELADA
+}
+
+enum PurchaseDiscountMode {
+  VALOR
+  PERCENTUAL
+}
+
+type PurchaseFilterOptionsDto {
+  suppliers: [String!]!
+  creators: [UserOptionDto!]!
+}
+
+type ListPurchasesResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  items: [PurchaseResponseDto!]!
+  total: Int!
+  currentPage: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+}
+
+type PurchaseMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: PurchaseResponseDto!
+}
+
+type SalesOrderItemResponseDto {
+  idSalesOrderItem: String!
+  idProduct: String!
+  productName: String!
+  productKind: ProductKind!
+  quantity: Float!
+  unitPrice: Float!
+  lineTotal: Float!
+}
+
+type SalesOrderResponseDto {
+  idSalesOrder: String!
+  idStore: String!
+  customerName: String
+  orderDate: DateTime!
+  status: SalesOrderStatus!
+  salesChannel: SalesChannel!
+  commissionPercent: Float!
+  commissionAmount: Float!
+  netTotal: Float!
+  discountAmount: Float!
+  discountMode: SalesDiscountMode!
+  discountPercent: Float!
+  itemsSubtotal: Float!
+  total: Float!
+  notes: String
+  createdByUserId: String!
+  createdByUserName: String
+  confirmedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  items: [SalesOrderItemResponseDto!]!
+}
+
+enum SalesOrderStatus {
+  ABERTA
+  CONFIRMADA
+  CANCELADA
+}
+
+enum SalesChannel {
+  BALCAO
+  IFOOD
+  RAPPI
+  FOOD_99
+  UBER_EATS
+  AIQFOME
+  WHATSAPP
+  TELEFONE
+  OUTRO
+}
+
+enum SalesDiscountMode {
+  VALOR
+  PERCENTUAL
+}
+
+type SalesOrderFilterOptionsDto {
+  customers: [String!]!
+  channels: [SalesChannel!]!
+  creators: [UserOptionDto!]!
+}
+
+type ListSalesOrdersResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  items: [SalesOrderResponseDto!]!
+  total: Int!
+  currentPage: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+}
+
+type SalesOrderMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: SalesOrderResponseDto!
+}
+
+type SupplierResponseDto {
+  idSupplier: String!
+  idStore: String!
+  name: String!
+  phone: String
+  email: String
+  address: String
+  instagram: String
+  document: String
+  notes: String
+  status: Boolean!
+  createdByUserId: String!
+  createdByUserName: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type SupplierFilterOptionsDto {
+  names: [String!]!
+  creators: [UserOptionDto!]!
+}
+
+type ListSuppliersResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  items: [SupplierResponseDto!]!
+  total: Int!
+  currentPage: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+}
+
+type SupplierMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: SupplierResponseDto!
+}
+
+type GetUserResponseDto {
+  idUsers: String!
+  name: String!
+  email: String!
+  username: String
+  urlAvatar: String
+  status: Boolean!
+  group: UserGroup!
+  inactivatedAt: String
+  mustChangePassword: Boolean
+  lastLoginAt: String
+  failedLoginAttempts: Int
+  lockedUntil: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+type UserFilterOptionDto {
+  idUsers: String!
+  name: String!
+  email: String!
+  username: String
+}
+
+type CreateUserResponseDto {
+  idUsers: String!
+  name: String!
+  email: String!
+  username: String!
+  group: UserGroup!
+  mustChangePassword: Boolean!
+  urlAvatar: String
+  status: Boolean!
+  createdAt: DateTime!
+}
+
+type CreateUserMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: CreateUserResponseDto!
+}
+
+type GetUsersListResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  items: [GetUserResponseDto!]!
+  total: Int!
+  currentPage: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+}
+
+type UserPagePermissionsResponseDto {
+  idUsers: String!
+  group: UserGroup!
+  effectivePermissions: [PageAccessKey!]!
+  defaultPermissions: [PageAccessKey!]!
+  useGroupDefaults: Boolean!
+  updatedAt: DateTime
+}
+
+type SetUserPagePermissionsMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: UserPagePermissionsResponseDto!
+}
+
+type AdminUpdateUserAccessResponseDto {
+  idUsers: String!
+  group: UserGroup!
+  status: Boolean!
+  inactivatedAt: DateTime
+  updatedAt: DateTime!
+}
+
+type AdminUpdateUserAccessMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: AdminUpdateUserAccessResponseDto!
+}
+
+type UnlockUserCredentialResponseDto {
+  idUsers: String!
+  updatedAt: DateTime!
+}
+
+type UnlockUserCredentialMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: UnlockUserCredentialResponseDto!
+}
+
+type UpdateUserResponseDto {
+  idUsers: String!
+  name: String!
+  email: String!
+  urlAvatar: String
+  status: Boolean!
+  updatedAt: DateTime!
+}
+
+type UpdateUserMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: UpdateUserResponseDto!
+}
+
+type Query {
+  getPageAccessMetadata: PageAccessMetadataResponseDto!
+  getUsers(input: GetUsersInputDto): GetUsersListResponseDto!
+  getUserFilterOptions: [UserFilterOptionDto!]!
+  getUser(input: GetUserInputDto!): GetUserResponseDto!
+  me: GetUserResponseDto!
+  getUserPagePermissions(input: GetUserPagePermissionsInputDto!): UserPagePermissionsResponseDto!
+  getMyPagePermissions: UserPagePermissionsResponseDto!
+  getMyStores: [StoreResponseDto!]!
+  getStoreById(input: GetStoreByIdInputDto!): StoreResponseDto!
+  getStoreMembers(input: GetStoreByIdInputDto!): [StoreMemberResponseDto!]!
+  getStoreProducts(input: ListProductsInputDto!): ListProductsResponseDto!
+  getStoreProductFilterOptions(input: GetProductFilterOptionsInputDto!): ProductFilterOptionsDto!
+  getProductById(input: GetProductByIdInputDto!): ProductResponseDto!
+  getStoreBrands(input: ListBrandsInputDto!): ListBrandsResponseDto!
+  getStoreBrandFilterOptions(input: GetBrandFilterOptionsInputDto!): BrandFilterOptionsDto!
+  getBrandById(input: GetBrandByIdInputDto!): BrandResponseDto!
+  getStoreSuppliers(input: ListSuppliersInputDto!): ListSuppliersResponseDto!
+  getStoreSupplierFilterOptions(input: GetSupplierFilterOptionsInputDto!): SupplierFilterOptionsDto!
+  getSupplierById(input: GetSupplierByIdInputDto!): SupplierResponseDto!
+  getStoreStock(input: ListStoreStockInputDto!): ListStoreStockResponseDto!
+  getStockMovements(input: ListStockMovementsInputDto!): ListStockMovementsResponseDto!
+  getStorePurchases(input: ListPurchasesInputDto!): ListPurchasesResponseDto!
+  getStorePurchaseFilterOptions(input: GetPurchaseFilterOptionsInputDto!): PurchaseFilterOptionsDto!
+  getPurchaseById(input: PurchaseScopeInputDto!): PurchaseResponseDto!
+  getStoreSalesOrders(input: ListSalesOrdersInputDto!): ListSalesOrdersResponseDto!
+  getStoreSalesOrderFilterOptions(input: GetSalesOrderFilterOptionsInputDto!): SalesOrderFilterOptionsDto!
+  getSalesOrderById(input: SalesOrderScopeInputDto!): SalesOrderResponseDto!
+  getStoreRecipes(input: ListRecipesInputDto!): ListRecipesResponseDto!
+  getRecipeById(input: RecipeScopeInputDto!): RecipeResponseDto!
+  getStoreProductionOrders(input: ListProductionOrdersInputDto!): ListProductionOrdersResponseDto!
+  getStoreProductionOrderFilterOptions(input: GetProductionOrderFilterOptionsInputDto!): ProductionOrderFilterOptionsDto!
+  getProductionOrderById(input: ProductionOrderScopeInputDto!): ProductionOrderResponseDto!
+  getFinanceDashboard(input: FinanceDashboardInputDto!): FinanceDashboardResponseDto!
+  myTermsAcceptanceStatus: TermsAcceptanceStatusResponseDto!
+}
+
+input GetUsersInputDto {
+  page: Int = 1
+  limit: Int = 10
+  name: String
+  email: String
+  username: String
+  group: UserGroup
+  status: Boolean
+}
+
+input GetUserInputDto {
+  idUsers: String
+  email: String
+}
+
+input GetUserPagePermissionsInputDto {
+  idUsers: String!
+}
+
+input GetStoreByIdInputDto {
+  idStore: String!
+}
+
+input ListProductsInputDto {
+  idStore: String!
+  page: Int
+  limit: Int
+  search: String
+  status: Boolean
+  kinds: [ProductKind!]
+  name: String
+  brand: String
+  withoutBrand: Boolean
+  unit: UnitOfMeasure
+  createdByUserId: String
+}
+
+input GetProductFilterOptionsInputDto {
+  idStore: String!
+}
+
+input GetProductByIdInputDto {
+  idStore: String!
+  idProduct: String!
+}
+
+input ListBrandsInputDto {
+  idStore: String!
+  page: Int
+  limit: Int
+  search: String
+  status: Boolean
+  name: String
+  createdByUserId: String
+}
+
+input GetBrandFilterOptionsInputDto {
+  idStore: String!
+}
+
+input GetBrandByIdInputDto {
+  idStore: String!
+  idBrand: String!
+}
+
+input ListSuppliersInputDto {
+  idStore: String!
+  page: Int
+  limit: Int
+  search: String
+  status: Boolean
+  name: String
+  createdByUserId: String
+}
+
+input GetSupplierFilterOptionsInputDto {
+  idStore: String!
+}
+
+input GetSupplierByIdInputDto {
+  idStore: String!
+  idSupplier: String!
+}
+
+input ListStoreStockInputDto {
+  idStore: String!
+  name: String
+  brand: String
+  withoutBrand: Boolean
+  kind: ProductKind
+  unit: UnitOfMeasure
+  status: Boolean
+  page: Int
+  limit: Int
+}
+
+input ListStockMovementsInputDto {
+  idStore: String!
+  idProduct: String
+  type: StockMovementType
+  page: Int
+  limit: Int
+}
+
+input ListPurchasesInputDto {
+  idStore: String!
+  page: Int
+  limit: Int
+  status: PurchaseStatus
+  supplierName: String
+  createdByUserId: String
+}
+
+input GetPurchaseFilterOptionsInputDto {
+  idStore: String!
+}
+
+input PurchaseScopeInputDto {
+  idStore: String!
+  idPurchase: String!
+}
+
+input ListSalesOrdersInputDto {
+  idStore: String!
+  page: Int
+  limit: Int
+  status: SalesOrderStatus
+  customerName: String
+  salesChannel: SalesChannel
+  createdByUserId: String
+}
+
+input GetSalesOrderFilterOptionsInputDto {
+  idStore: String!
+}
+
+input SalesOrderScopeInputDto {
+  idStore: String!
+  idSalesOrder: String!
+}
+
+input ListRecipesInputDto {
+  idStore: String!
+  page: Int
+  limit: Int
+  status: Boolean
+}
+
+input RecipeScopeInputDto {
+  idStore: String!
+  idRecipe: String!
+}
+
+input ListProductionOrdersInputDto {
+  idStore: String!
+  page: Int
+  limit: Int
+  status: ProductionOrderStatus
+  idRecipe: String
+  createdByUserId: String
+}
+
+input GetProductionOrderFilterOptionsInputDto {
+  idStore: String!
+}
+
+input ProductionOrderScopeInputDto {
+  idStore: String!
+  idProductionOrder: String!
+}
+
+input FinanceDashboardInputDto {
+  idStore: String!
+  from: DateTime
+  to: DateTime
+}
+
+type Mutation {
+  login(input: LoginInputDto!): AuthSessionResponseDto!
+  refreshAuthSession: AuthSessionResponseDto!
+  logout: LogoutResponseDto!
+  changeMyPassword(input: ChangePasswordInputDto!): LogoutResponseDto!
+  completeOnboardingTour: LogoutResponseDto!
+  requestPasswordRecovery(input: RequestPasswordRecoveryInputDto!): LogoutResponseDto!
+  verifyPasswordRecoveryCode(input: VerifyPasswordRecoveryCodeInputDto!): VerifyPasswordRecoveryCodeMutationResponseDto!
+  resetPasswordWithRecovery(input: ResetPasswordWithRecoveryInputDto!): LogoutResponseDto!
+  createUser(input: CreateUserInputDto!): CreateUserMutationResponseDto!
+  updateUser(input: UpdateUserInputDto!): UpdateUserMutationResponseDto!
+  adminUpdateUserAccess(input: AdminUpdateUserAccessInputDto!): AdminUpdateUserAccessMutationResponseDto!
+  setUserPagePermissions(input: SetUserPagePermissionsInputDto!): SetUserPagePermissionsMutationResponseDto!
+  unlockUserCredential(input: UnlockUserCredentialInputDto!): UnlockUserCredentialMutationResponseDto!
+  createStore(input: CreateStoreInputDto!): StoreMutationResponseDto!
+  updateStore(input: UpdateStoreInputDto!): StoreMutationResponseDto!
+  addStoreMember(input: AddStoreMemberInputDto!): [StoreMemberResponseDto!]!
+  updateStoreMemberRole(input: UpdateStoreMemberRoleInputDto!): [StoreMemberResponseDto!]!
+  removeStoreMember(input: RemoveStoreMemberInputDto!): [StoreMemberResponseDto!]!
+  createProduct(input: CreateProductInputDto!): ProductMutationResponseDto!
+  updateProduct(input: UpdateProductInputDto!): ProductMutationResponseDto!
+  createBrand(input: CreateBrandInputDto!): BrandMutationResponseDto!
+  updateBrand(input: UpdateBrandInputDto!): BrandMutationResponseDto!
+  createSupplier(input: CreateSupplierInputDto!): SupplierMutationResponseDto!
+  updateSupplier(input: UpdateSupplierInputDto!): SupplierMutationResponseDto!
+  adjustStock(input: AdjustStockInputDto!): SuccessResponseDto!
+  createPurchaseDraft(input: CreatePurchaseDraftInputDto!): PurchaseMutationResponseDto!
+  updatePurchaseHeader(input: UpdatePurchaseHeaderInputDto!): PurchaseMutationResponseDto!
+  addPurchaseItem(input: AddPurchaseItemInputDto!): PurchaseMutationResponseDto!
+  updatePurchaseItem(input: UpdatePurchaseItemInputDto!): PurchaseMutationResponseDto!
+  removePurchaseItem(input: RemovePurchaseItemInputDto!): PurchaseMutationResponseDto!
+  finalizePurchase(input: PurchaseScopeInputDto!): PurchaseMutationResponseDto!
+  cancelPurchase(input: PurchaseScopeInputDto!): PurchaseMutationResponseDto!
+  createSalesOrder(input: CreateSalesOrderInputDto!): SalesOrderMutationResponseDto!
+  updateSalesOrderHeader(input: UpdateSalesOrderHeaderInputDto!): SalesOrderMutationResponseDto!
+  addSalesOrderItem(input: AddSalesOrderItemInputDto!): SalesOrderMutationResponseDto!
+  updateSalesOrderItem(input: UpdateSalesOrderItemInputDto!): SalesOrderMutationResponseDto!
+  removeSalesOrderItem(input: RemoveSalesOrderItemInputDto!): SalesOrderMutationResponseDto!
+  confirmSalesOrder(input: SalesOrderScopeInputDto!): SalesOrderMutationResponseDto!
+  cancelSalesOrder(input: SalesOrderScopeInputDto!): SalesOrderMutationResponseDto!
+  createRecipe(input: CreateRecipeInputDto!): RecipeMutationResponseDto!
+  updateRecipe(input: UpdateRecipeInputDto!): RecipeMutationResponseDto!
+  addRecipeItem(input: AddRecipeItemInputDto!): RecipeMutationResponseDto!
+  addRecipeItems(input: AddRecipeItemsInputDto!): RecipeMutationResponseDto!
+  updateRecipeItem(input: UpdateRecipeItemInputDto!): RecipeMutationResponseDto!
+  removeRecipeItem(input: RemoveRecipeItemInputDto!): RecipeMutationResponseDto!
+  createProductionOrder(input: CreateProductionOrderInputDto!): ProductionOrderMutationResponseDto!
+  updateProductionOrder(input: UpdateProductionOrderInputDto!): ProductionOrderMutationResponseDto!
+  completeProductionOrder(input: ProductionOrderScopeInputDto!): ProductionOrderMutationResponseDto!
+  cancelProductionOrder(input: ProductionOrderScopeInputDto!): ProductionOrderMutationResponseDto!
+  acceptTermsOfUse: LogoutResponseDto!
+}
+
+input LoginInputDto {
+  username: String!
+  password: String!
+}
+
+input ChangePasswordInputDto {
+  currentPassword: String!
+  newPassword: String!
+}
+
+input RequestPasswordRecoveryInputDto {
+  email: String!
+}
+
+input VerifyPasswordRecoveryCodeInputDto {
+  email: String!
+  code: String!
+}
+
+input ResetPasswordWithRecoveryInputDto {
+  recoveryToken: String!
+  newPassword: String!
+}
+
+input CreateUserInputDto {
+  name: String!
+  email: String!
+  username: String!
+  group: UserGroup! = USER
+  urlAvatar: String
+  pagePermissions: [PageAccessKey!]
+}
+
+input UpdateUserInputDto {
+  idUsers: String
+  name: String
+  urlAvatar: String
+  status: Boolean
+}
+
+input AdminUpdateUserAccessInputDto {
+  idUsers: String!
+  group: UserGroup
+  status: Boolean
+  pagePermissions: [PageAccessKey!]
+  useGroupDefaults: Boolean
+}
+
+input SetUserPagePermissionsInputDto {
+  idUsers: String!
+  useGroupDefaults: Boolean!
+  pagePermissions: [PageAccessKey!]
+}
+
+input UnlockUserCredentialInputDto {
+  idUsers: String!
+}
+
+input CreateStoreInputDto {
+  name: String!
+  legalName: String
+  cnpj: String
+  whatsapp: String
+  email: String
+  instagram: String
+  ifoodUrl: String
+  food99Url: String
+}
+
+input UpdateStoreInputDto {
+  idStore: String!
+  name: String
+  legalName: String
+  cnpj: String
+  whatsapp: String
+  email: String
+  instagram: String
+  ifoodUrl: String
+  food99Url: String
+  status: Boolean
+}
+
+input AddStoreMemberInputDto {
+  idStore: String!
+  idUsers: String!
+  role: StoreRole!
+}
+
+input UpdateStoreMemberRoleInputDto {
+  idStore: String!
+  idUsers: String!
+  role: StoreRole!
+}
+
+input RemoveStoreMemberInputDto {
+  idStore: String!
+  idUsers: String!
+}
+
+input CreateProductInputDto {
+  idStore: String!
+  name: String!
+  description: String
+  brand: String
+  kind: ProductKind!
+  unit: UnitOfMeasure!
+  packagingUnit: PackagingUnit
+  packSize: Float
+  salePrice: Float
+}
+
+input UpdateProductInputDto {
+  idStore: String!
+  idProduct: String!
+  name: String
+  description: String
+  brand: String
+  kind: ProductKind
+  unit: UnitOfMeasure
+  packagingUnit: PackagingUnit
+  packSize: Float
+  salePrice: Float
+  status: Boolean
+}
+
+input CreateBrandInputDto {
+  idStore: String!
+  name: String!
+  status: Boolean
+}
+
+input UpdateBrandInputDto {
+  idStore: String!
+  idBrand: String!
+  name: String
+  status: Boolean
+}
+
+input CreateSupplierInputDto {
+  idStore: String!
+  name: String!
+  phone: String
+  email: String
+  address: String
+  instagram: String
+  document: String
+  notes: String
+  status: Boolean
+}
+
+input UpdateSupplierInputDto {
+  idStore: String!
+  idSupplier: String!
+  name: String
+  phone: String
+  email: String
+  address: String
+  instagram: String
+  document: String
+  notes: String
+  status: Boolean
+}
+
+input AdjustStockInputDto {
+  idStore: String!
+  idProduct: String!
+  type: StockMovementType!
+  quantity: Float!
+  unitCost: Float
+  note: String
+}
+
+input CreatePurchaseDraftInputDto {
+  idStore: String!
+  supplierName: String
+  purchaseDate: DateTime
+  notes: String
+}
+
+input UpdatePurchaseHeaderInputDto {
+  idStore: String!
+  idPurchase: String!
+  supplierName: String
+  purchaseDate: DateTime
+  freightAmount: Float
+  discountAmount: Float
+  discountMode: PurchaseDiscountMode
+  discountPercent: Float
+  notes: String
+}
+
+input AddPurchaseItemInputDto {
+  idStore: String!
+  idPurchase: String!
+  idProduct: String!
+  purchasedQuantity: Float!
+  purchasedUnit: String
+  conversionFactor: Float!
+  unitPrice: Float!
+}
+
+input UpdatePurchaseItemInputDto {
+  idStore: String!
+  idPurchase: String!
+  idPurchaseItem: String!
+  purchasedQuantity: Float
+  purchasedUnit: String
+  conversionFactor: Float
+  unitPrice: Float
+}
+
+input RemovePurchaseItemInputDto {
+  idStore: String!
+  idPurchase: String!
+  idPurchaseItem: String!
+}
+
+input CreateSalesOrderInputDto {
+  idStore: String!
+  customerName: String
+  orderDate: DateTime
+  salesChannel: SalesChannel
+  notes: String
+}
+
+input UpdateSalesOrderHeaderInputDto {
+  idStore: String!
+  idSalesOrder: String!
+  customerName: String
+  orderDate: DateTime
+  salesChannel: SalesChannel
+  commissionPercent: Float
+  discountAmount: Float
+  discountMode: SalesDiscountMode
+  discountPercent: Float
+  notes: String
+}
+
+input AddSalesOrderItemInputDto {
+  idStore: String!
+  idSalesOrder: String!
+  idProduct: String!
+  quantity: Float!
+  unitPrice: Float
+}
+
+input UpdateSalesOrderItemInputDto {
+  idStore: String!
+  idSalesOrder: String!
+  idSalesOrderItem: String!
+  quantity: Float
+  unitPrice: Float
+}
+
+input RemoveSalesOrderItemInputDto {
+  idStore: String!
+  idSalesOrder: String!
+  idSalesOrderItem: String!
+}
+
+input CreateRecipeInputDto {
+  idStore: String!
+  idOutputProduct: String!
+  name: String
+  yieldQuantity: Float!
+  laborCost: Float
+  overheadCost: Float
+  notes: String
+}
+
+input UpdateRecipeInputDto {
+  idStore: String!
+  idRecipe: String!
+  name: String
+  yieldQuantity: Float
+  laborCost: Float
+  overheadCost: Float
+  status: Boolean
+  notes: String
+}
+
+input AddRecipeItemInputDto {
+  idStore: String!
+  idRecipe: String!
+  idProduct: String!
+  quantity: Float!
+}
+
+input AddRecipeItemsInputDto {
+  idStore: String!
+  idRecipe: String!
+  items: [RecipeItemEntryInputDto!]!
+}
+
+input RecipeItemEntryInputDto {
+  idProduct: String!
+  quantity: Float!
+}
+
+input UpdateRecipeItemInputDto {
+  idStore: String!
+  idRecipe: String!
+  idRecipeItem: String!
+  quantity: Float!
+}
+
+input RemoveRecipeItemInputDto {
+  idStore: String!
+  idRecipe: String!
+  idRecipeItem: String!
+}
+
+input CreateProductionOrderInputDto {
+  idStore: String!
+  idRecipe: String!
+  productionDate: DateTime
+  batches: Float!
+  notes: String
+}
+
+input UpdateProductionOrderInputDto {
+  idStore: String!
+  idProductionOrder: String!
+  productionDate: DateTime
+  batches: Float
+  actualOutputQuantity: Float
+  laborCost: Float
+  overheadCost: Float
+  notes: String
+}

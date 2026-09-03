@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "git": {
+    "deploymentEnabled": {
+      "master": false
+    }
+  },
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "src/assets/**"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/index"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/internal/referrals/promote-credits",
+      "schedule": "50 8 * * *"
+    },
+    {
+      "path": "/internal/billing/subscription-lifecycle",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/internal/reminders/due-tomorrow",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/internal/users/process-account-deletions",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}

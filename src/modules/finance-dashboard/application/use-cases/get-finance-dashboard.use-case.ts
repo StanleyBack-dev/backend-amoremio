@@ -1,0 +1,88 @@
+import { Inject, Injectable } from "@nestjs/common";
+import { currentDateOnly } from "@/common/utils/date.util";
+import { StoreAuthorizationService } from "@/modules/stores/application/use-cases/store-authorization.use-case";
+import { StorePermission } from "@/modules/stores/domain/enums/store-permission.enum";
+import {
+  DASHBOARD_REPOSITORY,
+  type DashboardRepositoryPort,
+  type DashboardTotals,
+  type MonthlyPoint,
+  type ProductProfitRow,
+  type SalesChannelRow,
+  type TopProductRow,
+} from "@/modules/finance-dashboard/application/ports/dashboard-repository.port";
+
+export interface FinanceDashboardResult {
+  from: Date;
+  to: Date;
+  totals: DashboardTotals;
+  stockValue: number;
+  topProducts: TopProductRow[];
+  productProfitability: ProductProfitRow[];
+  monthlySeries: MonthlyPoint[];
+  salesByChannel: SalesChannelRow[];
+}
+
+export interface GetFinanceDashboardQuery {
+  idStore: string;
+  from?: Date;
+  to?: Date;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+@Injectable()
+export class GetFinanceDashboardUseCase {
+  constructor(
+    @Inject(DASHBOARD_REPOSITORY)
+    private readonly dashboardRepository: DashboardRepositoryPort,
+    private readonly storeAuthorizationService: StoreAuthorizationService,
+  ) {}
+
+  async execute(
+    userId: string,
+    query: GetFinanceDashboardQuery,
+  ): Promise<FinanceDashboardResult> {
+    await this.storeAuthorizationService.assertStorePermission(
+      userId,
+      query.idStore,
+      StorePermission.VIEW_DASHBOARD,
+    );
+
+    // Window on whole calendar days in the store timezone: `to` covers all of
+    // today (records stored as a bare `date` sit at 00:00, and one created
+    // late in the local evening can land on tomorrow's UTC date), `from`
+    // starts at the beginning of the day 29 days back.
+    const today = currentDateOnly();
+    const to = query.to ?? new Date(today.getTime() + DAY_MS);
+    const from = query.from ?? new Date(today.getTime() - 29 * DAY_MS);
+    const period = { idStore: query.idStore, from, to };
+
+    const [
+      totals,
+      stockValue,
+      topProducts,
+      productProfitability,
+      monthlySeries,
+      salesByChannel,
+    ] = await Promise.all([
+      this.dashboardRepository.getTotals(period),
+      this.dashboardRepository.getStockValue(query.idStore),
+      this.dashboardRepository.getTopProducts(period, 5),
+      this.dashboardRepository.getProductProfitability(period),
+      this.dashboardRepository.getMonthlySeries(period),
+      this.dashboardRepository.getSalesByChannel(period),
+    ]);
+
+    return {
+      from,
+      to,
+      totals,
+      stockValue,
+      topProducts,
+      productProfitability,
+      monthlySeries,
+      salesByChannel,
+    };
+  }
+}

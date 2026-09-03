@@ -1,0 +1,67 @@
+# Mirrors the migration-first step in deploy-backend.yml, pointed at the
+# beta Neon branch instead of production. Deliberately does not deploy to
+# Vercel afterwards — beta already redeploys automatically via Vercel's
+# native git integration on push, independent of this workflow.
+name: Run Beta Database Migrations
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches:
+      - beta
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migrate-beta-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Run migrations (Beta)
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate beta DB envs
+        env:
+          DB_HOST: ${{ secrets.BETA_DB_HOST }}
+          DB_PORT: ${{ secrets.BETA_DB_PORT }}
+          DB_USER: ${{ secrets.BETA_DB_USER }}
+          DB_PASS: ${{ secrets.BETA_DB_PASS }}
+          DB_NAME: ${{ secrets.BETA_DB_NAME }}
+        run: |
+          test -n "$DB_HOST" || (echo "Missing secret: BETA_DB_HOST" && exit 1)
+          test -n "$DB_PORT" || (echo "Missing secret: BETA_DB_PORT" && exit 1)
+          test -n "$DB_USER" || (echo "Missing secret: BETA_DB_USER" && exit 1)
+          test -n "$DB_PASS" || (echo "Missing secret: BETA_DB_PASS" && exit 1)
+          test -n "$DB_NAME" || (echo "Missing secret: BETA_DB_NAME" && exit 1)
+
+      - name: Run database migrations (beta, migration-first)
+        env:
+          NODE_ENV: beta
+          DB_HOST: ${{ secrets.BETA_DB_HOST }}
+          DB_PORT: ${{ secrets.BETA_DB_PORT }}
+          DB_USER: ${{ secrets.BETA_DB_USER }}
+          DB_PASS: ${{ secrets.BETA_DB_PASS }}
+          DB_NAME: ${{ secrets.BETA_DB_NAME }}
+          DB_SSL: "true"
+          DB_TIMEZONE: "America/Sao_Paulo"
+        run: npm run migration:run:beta
