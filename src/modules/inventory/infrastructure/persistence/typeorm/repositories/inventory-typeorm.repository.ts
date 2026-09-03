@@ -261,7 +261,10 @@ export class InventoryTypeormRepository implements InventoryRepositoryPort {
 
     return {
       records: products.map((product) =>
-        this.mapItemView(product, itemsByProduct.get(product.idProduct) ?? null),
+        this.mapItemView(
+          product,
+          itemsByProduct.get(product.idProduct) ?? null,
+        ),
       ),
       total,
       valueTotal,

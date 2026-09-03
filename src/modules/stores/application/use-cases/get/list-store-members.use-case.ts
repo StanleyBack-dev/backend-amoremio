@@ -15,10 +15,7 @@ export class ListStoreMembersUseCase {
     private readonly storeAuthorizationService: StoreAuthorizationService,
   ) {}
 
-  async execute(
-    userId: string,
-    idStore: string,
-  ): Promise<StoreMemberView[]> {
+  async execute(userId: string, idStore: string): Promise<StoreMemberView[]> {
     await this.storeAuthorizationService.assertStorePermission(
       userId,
       idStore,

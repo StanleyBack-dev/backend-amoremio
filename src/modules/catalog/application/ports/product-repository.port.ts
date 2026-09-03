@@ -79,10 +79,7 @@ export interface ProductRepositoryPort {
   findById(idStore: string, idProduct: string): Promise<ProductView | null>;
   // Batch lookup — returns only the ids that exist in the store, in no
   // particular order. Creator names are not resolved.
-  findManyByIds(
-    idStore: string,
-    idProducts: string[],
-  ): Promise<ProductView[]>;
+  findManyByIds(idStore: string, idProducts: string[]): Promise<ProductView[]>;
   // When `brand` is a non-empty string, the match is scoped to that name/brand
   // pair; otherwise it matches on the name alone.
   findByName(

@@ -9,10 +9,12 @@ const allowAuth = {
 } as never;
 
 describe("AddStoreMemberUseCase", () => {
-  function build(overrides: {
-    targetUser?: unknown;
-    existingMembership?: unknown;
-  } = {}) {
+  function build(
+    overrides: {
+      targetUser?: unknown;
+      existingMembership?: unknown;
+    } = {},
+  ) {
     const targetUser =
       "targetUser" in overrides
         ? overrides.targetUser
@@ -67,7 +69,9 @@ describe("AddStoreMemberUseCase", () => {
   });
 
   it("rejects a user already in the store", async () => {
-    const { useCase } = build({ existingMembership: { idStoreMembership: "m" } });
+    const { useCase } = build({
+      existingMembership: { idStoreMembership: "m" },
+    });
 
     await expect(
       useCase.execute("owner-1", {

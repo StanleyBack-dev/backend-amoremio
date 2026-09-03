@@ -16,13 +16,11 @@ function build(overrides?: {
       .mockImplementation((_store: string, id: string) =>
         Promise.resolve(recipeByOutput[id] ?? null),
       ),
-    findRecipeById: jest
-      .fn()
-      .mockResolvedValue({
-        idRecipe: "rec-1",
-        idOutputProduct: "out-1",
-        items: overrides?.recipeItems ?? [],
-      }),
+    findRecipeById: jest.fn().mockResolvedValue({
+      idRecipe: "rec-1",
+      idOutputProduct: "out-1",
+      items: overrides?.recipeItems ?? [],
+    }),
     createRecipe: jest
       .fn()
       .mockImplementation((payload) =>
@@ -272,8 +270,16 @@ describe("RecipeCrudUseCases.addItems", () => {
       expect.objectContaining({
         idRecipe: "rec-1",
         items: [
-          expect.objectContaining({ idProduct: "in-1", quantity: 0.5, unit: "KG" }),
-          expect.objectContaining({ idProduct: "in-2", quantity: 1.25, unit: "KG" }),
+          expect.objectContaining({
+            idProduct: "in-1",
+            quantity: 0.5,
+            unit: "KG",
+          }),
+          expect.objectContaining({
+            idProduct: "in-2",
+            quantity: 1.25,
+            unit: "KG",
+          }),
         ],
       }),
     );

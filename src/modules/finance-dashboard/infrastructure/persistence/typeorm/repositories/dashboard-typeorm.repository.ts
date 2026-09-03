@@ -206,8 +206,7 @@ export class DashboardTypeormRepository implements DashboardRepositoryPort {
           grossProfit,
           commission,
           netProfit,
-          marginPercent:
-            revenue > 0 ? num((netProfit / revenue) * 100) : 0,
+          marginPercent: revenue > 0 ? num((netProfit / revenue) * 100) : 0,
         };
       },
     );

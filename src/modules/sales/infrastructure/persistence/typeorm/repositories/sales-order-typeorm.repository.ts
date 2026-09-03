@@ -247,9 +247,8 @@ export class SalesOrderTypeormRepository implements SalesOrderRepositoryPort {
     // The effective amount is frozen back onto discountAmount either way.
     const effectiveDiscount =
       order.discountMode === SalesDiscountMode.PERCENTUAL
-        ? Math.round(
-            subtotal * (Number(order.discountPercent) / 100) * 100,
-          ) / 100
+        ? Math.round(subtotal * (Number(order.discountPercent) / 100) * 100) /
+          100
         : Number(order.discountAmount);
 
     const total = Math.max(subtotal - effectiveDiscount, 0);

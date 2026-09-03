@@ -19,7 +19,12 @@ export class PurchaseEntity {
   @Index()
   idStore!: string;
 
-  @Column({ name: "supplier_name", type: "varchar", length: 160, nullable: true })
+  @Column({
+    name: "supplier_name",
+    type: "varchar",
+    length: 160,
+    nullable: true,
+  })
   supplierName?: string | null;
 
   @Column({

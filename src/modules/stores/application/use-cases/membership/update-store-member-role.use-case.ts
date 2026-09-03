@@ -39,10 +39,7 @@ export class UpdateStoreMemberRoleUseCase {
 
     // Demoting the only remaining DONO would leave the store without an
     // owner — block it until another member is promoted first.
-    if (
-      membership.role === StoreRole.DONO &&
-      command.role !== StoreRole.DONO
-    ) {
+    if (membership.role === StoreRole.DONO && command.role !== StoreRole.DONO) {
       const owners = await this.storeRepository.countOwners(command.idStore);
       if (owners <= 1) {
         throw AppException.from(APP_ERRORS.stores.lastOwner, undefined);

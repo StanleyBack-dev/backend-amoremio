@@ -158,5 +158,4 @@ describe("AuthCredentialsService", () => {
       ).rejects.toBeInstanceOf(AppException);
     });
   });
-
 });

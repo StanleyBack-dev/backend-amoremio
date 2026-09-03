@@ -44,7 +44,10 @@ export class UpdateBrandUseCase {
           field: "name",
         });
       }
-      const clash = await this.brandRepository.findByName(command.idStore, name);
+      const clash = await this.brandRepository.findByName(
+        command.idStore,
+        name,
+      );
       if (clash && clash.idBrand !== command.idBrand) {
         throw AppException.from(APP_ERRORS.brands.duplicatedName, undefined);
       }

@@ -7,9 +7,7 @@ export class SupplierFilterOptionsDto {
   static fromView(view: SupplierFilterOptions): SupplierFilterOptionsDto {
     const dto = new SupplierFilterOptionsDto();
     dto.names = view.names;
-    dto.creators = view.creators.map((creator) =>
-      UserOptionDto.from(creator),
-    );
+    dto.creators = view.creators.map((creator) => UserOptionDto.from(creator));
     return dto;
   }
 

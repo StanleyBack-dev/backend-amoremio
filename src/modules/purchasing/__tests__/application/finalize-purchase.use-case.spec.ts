@@ -38,15 +38,15 @@ function build(overrides?: { purchase?: unknown }) {
     findById: jest
       .fn()
       .mockResolvedValue(
-        "purchase" in (overrides ?? {})
-          ? overrides!.purchase
-          : purchaseView(),
+        "purchase" in (overrides ?? {}) ? overrides!.purchase : purchaseView(),
       ),
-    finalize: jest
-      .fn()
-      .mockImplementation((payload) =>
-        Promise.resolve({ ...purchaseView(), status: PurchaseStatus.FINALIZADA, ...payload }),
-      ),
+    finalize: jest.fn().mockImplementation((payload) =>
+      Promise.resolve({
+        ...purchaseView(),
+        status: PurchaseStatus.FINALIZADA,
+        ...payload,
+      }),
+    ),
   };
   const auth = {
     assertStorePermission: jest.fn().mockResolvedValue(undefined),

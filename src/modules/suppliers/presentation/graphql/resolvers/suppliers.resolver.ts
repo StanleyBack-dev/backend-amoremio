@@ -38,16 +38,11 @@ export class SuppliersResolver {
     @CurrentUser() user: AuthenticatedUser,
     @Args("input") input: ListSuppliersInputDto,
   ) {
-    const result = await this.listSuppliersUseCase.execute(
-      user.idUsers,
-      input,
-    );
+    const result = await this.listSuppliersUseCase.execute(user.idUsers, input);
     return buildPaginatedListResponse(
       {
         ...result,
-        items: result.items.map((item) =>
-          SupplierResponseDto.fromView(item),
-        ),
+        items: result.items.map((item) => SupplierResponseDto.fromView(item)),
       },
       RESPONSE_MESSAGES.suppliers.listed,
     );

@@ -3,10 +3,7 @@ import { ProductKind } from "@/modules/catalog/domain/enums/product-kind.enum";
 import { AddPurchaseItemUseCase } from "@/modules/purchasing/application/use-cases/add-purchase-item.use-case";
 import { PurchaseStatus } from "@/modules/purchasing/domain/enums/purchase-status.enum";
 
-function build(overrides?: {
-  purchase?: unknown;
-  product?: unknown;
-}) {
+function build(overrides?: { purchase?: unknown; product?: unknown }) {
   const purchaseRepository = {
     findById: jest
       .fn()
@@ -15,23 +12,23 @@ function build(overrides?: {
           ? overrides!.purchase
           : { idPurchase: "pur-1", status: PurchaseStatus.RASCUNHO, items: [] },
       ),
-    addItem: jest.fn().mockImplementation((payload) =>
-      Promise.resolve({ idPurchase: "pur-1", items: [payload] }),
-    ),
+    addItem: jest
+      .fn()
+      .mockImplementation((payload) =>
+        Promise.resolve({ idPurchase: "pur-1", items: [payload] }),
+      ),
   };
   const productRepository = {
-    findById: jest
-      .fn()
-      .mockResolvedValue(
-        "product" in (overrides ?? {})
-          ? overrides!.product
-          : {
-              idProduct: "prod-1",
-              name: "Coca",
-              unit: "UN",
-              kind: ProductKind.REVENDA,
-            },
-      ),
+    findById: jest.fn().mockResolvedValue(
+      "product" in (overrides ?? {})
+        ? overrides!.product
+        : {
+            idProduct: "prod-1",
+            name: "Coca",
+            unit: "UN",
+            kind: ProductKind.REVENDA,
+          },
+    ),
   };
   const auth = {
     assertStorePermission: jest.fn().mockResolvedValue(undefined),

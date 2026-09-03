@@ -39,10 +39,7 @@ function optionalText(value: string | undefined | null): string | null {
 // Instagram is stored as a bare handle (no leading "@", no URL).
 function normalizeInstagram(value: string | undefined | null): string | null {
   const trimmed = text(value).replace(/^@+/, "");
-  const handle = trimmed.replace(
-    /^https?:\/\/(www\.)?instagram\.com\//i,
-    "",
-  );
+  const handle = trimmed.replace(/^https?:\/\/(www\.)?instagram\.com\//i, "");
   return handle.replace(/\/+$/, "") || null;
 }
 

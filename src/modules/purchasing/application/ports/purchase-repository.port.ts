@@ -115,19 +115,11 @@ export interface PurchaseRepositoryPort {
     filters?: ListPurchasesFilters,
   ): Promise<{ records: PurchaseView[]; total: number }>;
   listFilterOptions(idStore: string): Promise<PurchaseFilterOptions>;
-  updateHeader(
-    payload: UpdatePurchaseHeaderPayload,
-  ): Promise<PurchaseView>;
+  updateHeader(payload: UpdatePurchaseHeaderPayload): Promise<PurchaseView>;
   addItem(payload: AddPurchaseItemPayload): Promise<PurchaseView>;
   updateItem(payload: UpdatePurchaseItemPayload): Promise<PurchaseView>;
-  removeItem(
-    idPurchase: string,
-    idPurchaseItem: string,
-  ): Promise<PurchaseView>;
-  setStatus(
-    idPurchase: string,
-    status: PurchaseStatus,
-  ): Promise<PurchaseView>;
+  removeItem(idPurchase: string, idPurchaseItem: string): Promise<PurchaseView>;
+  setStatus(idPurchase: string, status: PurchaseStatus): Promise<PurchaseView>;
   finalize(payload: FinalizePurchasePayload): Promise<PurchaseView>;
 }
 

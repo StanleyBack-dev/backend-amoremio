@@ -56,10 +56,7 @@ export class UpdateSupplierUseCase {
         name,
       );
       if (clash && clash.idSupplier !== command.idSupplier) {
-        throw AppException.from(
-          APP_ERRORS.suppliers.duplicatedName,
-          undefined,
-        );
+        throw AppException.from(APP_ERRORS.suppliers.duplicatedName, undefined);
       }
     }
 

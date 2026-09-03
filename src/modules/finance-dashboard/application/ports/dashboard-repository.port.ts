@@ -62,9 +62,7 @@ export interface DashboardRepositoryPort {
     period: DashboardPeriod,
     limit: number,
   ): Promise<TopProductRow[]>;
-  getProductProfitability(
-    period: DashboardPeriod,
-  ): Promise<ProductProfitRow[]>;
+  getProductProfitability(period: DashboardPeriod): Promise<ProductProfitRow[]>;
   getMonthlySeries(period: DashboardPeriod): Promise<MonthlyPoint[]>;
   getSalesByChannel(period: DashboardPeriod): Promise<SalesChannelRow[]>;
 }

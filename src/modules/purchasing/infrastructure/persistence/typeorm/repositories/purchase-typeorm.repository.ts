@@ -132,7 +132,9 @@ export class PurchaseTypeormRepository implements PurchaseRepositoryPort {
       .getRawMany<{ supplierName: string | null; createdByUserId: string }>();
 
     const suppliers = Array.from(
-      new Set(rows.map((row) => row.supplierName).filter((v): v is string => !!v)),
+      new Set(
+        rows.map((row) => row.supplierName).filter((v): v is string => !!v),
+      ),
     ).sort((a, b) => a.localeCompare(b, "pt-BR"));
 
     const creatorIds = Array.from(
@@ -213,9 +215,7 @@ export class PurchaseTypeormRepository implements PurchaseRepositoryPort {
     return this.loadView(payload.idPurchase);
   }
 
-  async updateItem(
-    payload: UpdatePurchaseItemPayload,
-  ): Promise<PurchaseView> {
+  async updateItem(payload: UpdatePurchaseItemPayload): Promise<PurchaseView> {
     const item = await this.itemRepository.findOne({
       where: {
         idPurchaseItem: payload.idPurchaseItem,
@@ -309,8 +309,7 @@ export class PurchaseTypeormRepository implements PurchaseRepositoryPort {
           ) / 100
         : Number(purchase.discountAmount);
 
-    const total =
-      subtotal + Number(purchase.freightAmount) - effectiveDiscount;
+    const total = subtotal + Number(purchase.freightAmount) - effectiveDiscount;
     purchase.discountAmount = Math.max(effectiveDiscount, 0).toFixed(2);
     purchase.itemsSubtotal = subtotal.toFixed(2);
     purchase.total = Math.max(total, 0).toFixed(2);

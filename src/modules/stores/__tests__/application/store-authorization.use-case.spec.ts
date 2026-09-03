@@ -9,18 +9,22 @@ function build(overrides?: {
   membershipRole?: StoreRole | null;
 }) {
   const userRepository = {
-    findOne: jest.fn().mockResolvedValue(
-      overrides?.userGroup
-        ? { idUsers: "user-1", group: overrides.userGroup }
-        : { idUsers: "user-1", group: UserGroup.USER },
-    ),
+    findOne: jest
+      .fn()
+      .mockResolvedValue(
+        overrides?.userGroup
+          ? { idUsers: "user-1", group: overrides.userGroup }
+          : { idUsers: "user-1", group: UserGroup.USER },
+      ),
   };
   const storeRepository = {
-    findMembership: jest.fn().mockResolvedValue(
-      overrides?.membershipRole
-        ? { idStoreMembership: "m-1", role: overrides.membershipRole }
-        : null,
-    ),
+    findMembership: jest
+      .fn()
+      .mockResolvedValue(
+        overrides?.membershipRole
+          ? { idStoreMembership: "m-1", role: overrides.membershipRole }
+          : null,
+      ),
   };
 
   const service = new StoreAuthorizationService(

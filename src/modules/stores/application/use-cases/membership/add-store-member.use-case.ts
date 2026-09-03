@@ -50,10 +50,7 @@ export class AddStoreMemberUseCase {
       command.idUsers,
     );
     if (existing) {
-      throw AppException.from(
-        APP_ERRORS.stores.memberAlreadyExists,
-        undefined,
-      );
+      throw AppException.from(APP_ERRORS.stores.memberAlreadyExists, undefined);
     }
 
     await this.storeRepository.addMember(

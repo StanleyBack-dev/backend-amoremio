@@ -45,8 +45,8 @@ describe("CreateStoreUseCase", () => {
   it("rejects an invalid store name", async () => {
     const { useCase } = build();
 
-    await expect(useCase.execute("user-1", { name: "  " })).rejects.toBeInstanceOf(
-      AppException,
-    );
+    await expect(
+      useCase.execute("user-1", { name: "  " }),
+    ).rejects.toBeInstanceOf(AppException);
   });
 });
