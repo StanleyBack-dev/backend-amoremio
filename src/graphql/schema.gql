@@ -342,8 +342,8 @@ type ProductProfitabilityDto {
   marginPercent: Float!
 }
 
-type MonthlyPointDto {
-  month: String!
+type TimeSeriesPointDto {
+  date: String!
   purchases: Float!
   sales: Float!
 }
@@ -355,8 +355,15 @@ type FinanceDashboardResponseDto {
   stockValue: Float!
   topProducts: [TopProductDto!]!
   productProfitability: [ProductProfitabilityDto!]!
-  monthlySeries: [MonthlyPointDto!]!
+  granularity: DashboardGranularity!
+  timeSeries: [TimeSeriesPointDto!]!
   salesByChannel: [SalesChannelDto!]!
+}
+
+enum DashboardGranularity {
+  DAY
+  WEEK
+  MONTH
 }
 
 type TermsAcceptanceStatusResponseDto {

@@ -1,12 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { DataSource } from "typeorm";
 import {
+  type DashboardGranularity,
   type DashboardPeriod,
   type DashboardRepositoryPort,
   type DashboardTotals,
-  type MonthlyPoint,
   type ProductProfitRow,
   type SalesChannelRow,
+  type TimeSeriesPoint,
   type TopProductRow,
 } from "@/modules/finance-dashboard/application/ports/dashboard-repository.port";
 import { PurchaseStatus } from "@/modules/purchasing/domain/enums/purchase-status.enum";
@@ -214,47 +215,62 @@ export class DashboardTypeormRepository implements DashboardRepositoryPort {
     return rows.sort((a, b) => b.netProfit - a.netProfit);
   }
 
-  async getMonthlySeries(period: DashboardPeriod): Promise<MonthlyPoint[]> {
+  async getTimeSeries(
+    period: DashboardPeriod,
+    granularity: DashboardGranularity,
+  ): Promise<TimeSeriesPoint[]> {
     const purchases = await this.dataSource.query(
-      `SELECT to_char(purchase_date, 'YYYY-MM') AS month,
+      `SELECT to_char(date_trunc($5, purchase_date), 'YYYY-MM-DD') AS bucket,
               COALESCE(SUM(total), 0) AS total
          FROM tb_purchases
         WHERE idtb_stores = $1 AND status = $2
           AND purchase_date BETWEEN $3 AND $4
         GROUP BY 1`,
-      [period.idStore, PurchaseStatus.FINALIZADA, period.from, period.to],
+      [
+        period.idStore,
+        PurchaseStatus.FINALIZADA,
+        period.from,
+        period.to,
+        granularity,
+      ],
     );
     const sales = await this.dataSource.query(
-      `SELECT to_char(order_date, 'YYYY-MM') AS month,
+      `SELECT to_char(date_trunc($5, order_date), 'YYYY-MM-DD') AS bucket,
               COALESCE(SUM(total), 0) AS total
          FROM tb_sales_orders
         WHERE idtb_stores = $1 AND status = $2
           AND order_date BETWEEN $3 AND $4
         GROUP BY 1`,
-      [period.idStore, SalesOrderStatus.CONFIRMADA, period.from, period.to],
+      [
+        period.idStore,
+        SalesOrderStatus.CONFIRMADA,
+        period.from,
+        period.to,
+        granularity,
+      ],
     );
 
-    const byMonth = new Map<string, MonthlyPoint>();
+    const byBucket = new Map<string, TimeSeriesPoint>();
     for (const row of purchases) {
-      byMonth.set(row.month, {
-        month: row.month,
+      byBucket.set(row.bucket, {
+        date: row.bucket,
         purchases: num(row.total),
         sales: 0,
       });
     }
     for (const row of sales) {
-      const existing = byMonth.get(row.month);
+      const existing = byBucket.get(row.bucket);
       if (existing) {
         existing.sales = num(row.total);
       } else {
-        byMonth.set(row.month, {
-          month: row.month,
+        byBucket.set(row.bucket, {
+          date: row.bucket,
           purchases: 0,
           sales: num(row.total),
         });
       }
     }
 
-    return [...byMonth.values()].sort((a, b) => a.month.localeCompare(b.month));
+    return [...byBucket.values()].sort((a, b) => a.date.localeCompare(b.date));
   }
 }

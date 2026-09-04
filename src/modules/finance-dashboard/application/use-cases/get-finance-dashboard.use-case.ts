@@ -4,11 +4,12 @@ import { StoreAuthorizationService } from "@/modules/stores/application/use-case
 import { StorePermission } from "@/modules/stores/domain/enums/store-permission.enum";
 import {
   DASHBOARD_REPOSITORY,
+  type DashboardGranularity,
   type DashboardRepositoryPort,
   type DashboardTotals,
-  type MonthlyPoint,
   type ProductProfitRow,
   type SalesChannelRow,
+  type TimeSeriesPoint,
   type TopProductRow,
 } from "@/modules/finance-dashboard/application/ports/dashboard-repository.port";
 
@@ -19,7 +20,8 @@ export interface FinanceDashboardResult {
   stockValue: number;
   topProducts: TopProductRow[];
   productProfitability: ProductProfitRow[];
-  monthlySeries: MonthlyPoint[];
+  granularity: DashboardGranularity;
+  timeSeries: TimeSeriesPoint[];
   salesByChannel: SalesChannelRow[];
 }
 
@@ -30,6 +32,15 @@ export interface GetFinanceDashboardQuery {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+// Short ranges read best day-by-day; longer ones would otherwise render an
+// unreadable number of points, so they step up to weekly/monthly buckets.
+function granularityFor(from: Date, to: Date): DashboardGranularity {
+  const spanDays = Math.round((to.getTime() - from.getTime()) / DAY_MS);
+  if (spanDays <= 31) return "day";
+  if (spanDays <= 180) return "week";
+  return "month";
+}
 
 @Injectable()
 export class GetFinanceDashboardUseCase {
@@ -57,20 +68,21 @@ export class GetFinanceDashboardUseCase {
     const to = query.to ?? new Date(today.getTime() + DAY_MS);
     const from = query.from ?? new Date(today.getTime() - 29 * DAY_MS);
     const period = { idStore: query.idStore, from, to };
+    const granularity = granularityFor(from, to);
 
     const [
       totals,
       stockValue,
       topProducts,
       productProfitability,
-      monthlySeries,
+      timeSeries,
       salesByChannel,
     ] = await Promise.all([
       this.dashboardRepository.getTotals(period),
       this.dashboardRepository.getStockValue(query.idStore),
-      this.dashboardRepository.getTopProducts(period, 5),
+      this.dashboardRepository.getTopProducts(period, 8),
       this.dashboardRepository.getProductProfitability(period),
-      this.dashboardRepository.getMonthlySeries(period),
+      this.dashboardRepository.getTimeSeries(period, granularity),
       this.dashboardRepository.getSalesByChannel(period),
     ]);
 
@@ -81,7 +93,8 @@ export class GetFinanceDashboardUseCase {
       stockValue,
       topProducts,
       productProfitability,
-      monthlySeries,
+      granularity,
+      timeSeries,
       salesByChannel,
     };
   }
