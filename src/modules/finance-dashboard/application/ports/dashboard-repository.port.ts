@@ -49,8 +49,10 @@ export type ProductProfitRow = {
   marginPercent: number;
 };
 
-export type MonthlyPoint = {
-  month: string; // YYYY-MM
+export type DashboardGranularity = "day" | "week" | "month";
+
+export type TimeSeriesPoint = {
+  date: string; // ISO bucket start (YYYY-MM-DD)
   purchases: number;
   sales: number;
 };
@@ -63,7 +65,10 @@ export interface DashboardRepositoryPort {
     limit: number,
   ): Promise<TopProductRow[]>;
   getProductProfitability(period: DashboardPeriod): Promise<ProductProfitRow[]>;
-  getMonthlySeries(period: DashboardPeriod): Promise<MonthlyPoint[]>;
+  getTimeSeries(
+    period: DashboardPeriod,
+    granularity: DashboardGranularity,
+  ): Promise<TimeSeriesPoint[]>;
   getSalesByChannel(period: DashboardPeriod): Promise<SalesChannelRow[]>;
 }
 

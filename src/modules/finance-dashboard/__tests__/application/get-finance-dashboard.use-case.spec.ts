@@ -16,7 +16,7 @@ function build() {
     getStockValue: jest.fn().mockResolvedValue(250),
     getTopProducts: jest.fn().mockResolvedValue([]),
     getProductProfitability: jest.fn().mockResolvedValue([]),
-    getMonthlySeries: jest.fn().mockResolvedValue([]),
+    getTimeSeries: jest.fn().mockResolvedValue([]),
     getSalesByChannel: jest.fn().mockResolvedValue([]),
   };
   const auth = {
@@ -48,7 +48,7 @@ describe("GetFinanceDashboardUseCase", () => {
     expect(result.stockValue).toBe(250);
     expect(dashboardRepository.getTopProducts).toHaveBeenCalledWith(
       expect.objectContaining({ idStore: "store-1" }),
-      5,
+      8,
     );
   });
 
@@ -64,5 +64,37 @@ describe("GetFinanceDashboardUseCase", () => {
     // Both ends land on calendar-day (00:00 UTC) boundaries.
     expect(period.from.getTime() % 86_400_000).toBe(0);
     expect(period.to.getTime() % 86_400_000).toBe(0);
+  });
+
+  it("picks time-series granularity from the requested span", async () => {
+    const { useCase, dashboardRepository } = build();
+    const DAY_MS = 86_400_000;
+    const to = new Date("2026-09-01T00:00:00.000Z");
+
+    const day = await useCase.execute("user-1", {
+      idStore: "store-1",
+      from: new Date(to.getTime() - 10 * DAY_MS),
+      to,
+    });
+    expect(day.granularity).toBe("day");
+
+    const week = await useCase.execute("user-1", {
+      idStore: "store-1",
+      from: new Date(to.getTime() - 90 * DAY_MS),
+      to,
+    });
+    expect(week.granularity).toBe("week");
+
+    const month = await useCase.execute("user-1", {
+      idStore: "store-1",
+      from: new Date(to.getTime() - 400 * DAY_MS),
+      to,
+    });
+    expect(month.granularity).toBe("month");
+
+    expect(dashboardRepository.getTimeSeries).toHaveBeenLastCalledWith(
+      expect.objectContaining({ idStore: "store-1" }),
+      "month",
+    );
   });
 });
