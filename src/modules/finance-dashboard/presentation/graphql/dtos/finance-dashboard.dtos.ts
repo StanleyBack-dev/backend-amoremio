@@ -1,6 +1,21 @@
-import { Field, Float, InputType, Int, ObjectType } from "@nestjs/graphql";
+import {
+  Field,
+  Float,
+  InputType,
+  Int,
+  ObjectType,
+  registerEnumType,
+} from "@nestjs/graphql";
 import { IsOptional, IsUUID } from "class-validator";
 import type { FinanceDashboardResult } from "@/modules/finance-dashboard/application/use-cases/get-finance-dashboard.use-case";
+
+export enum DashboardGranularityEnum {
+  DAY = "day",
+  WEEK = "week",
+  MONTH = "month",
+}
+
+registerEnumType(DashboardGranularityEnum, { name: "DashboardGranularity" });
 
 @InputType()
 export class FinanceDashboardInputDto {
@@ -61,8 +76,8 @@ class ProductProfitabilityDto {
 }
 
 @ObjectType()
-class MonthlyPointDto {
-  @Field() month!: string;
+class TimeSeriesPointDto {
+  @Field() date!: string;
   @Field(() => Float) purchases!: number;
   @Field(() => Float) sales!: number;
 }
@@ -79,7 +94,8 @@ export class FinanceDashboardResponseDto {
     dto.stockValue = result.stockValue;
     dto.topProducts = result.topProducts;
     dto.productProfitability = result.productProfitability;
-    dto.monthlySeries = result.monthlySeries;
+    dto.granularity = result.granularity as DashboardGranularityEnum;
+    dto.timeSeries = result.timeSeries;
     dto.salesByChannel = result.salesByChannel;
     return dto;
   }
@@ -102,8 +118,11 @@ export class FinanceDashboardResponseDto {
   @Field(() => [ProductProfitabilityDto])
   productProfitability!: ProductProfitabilityDto[];
 
-  @Field(() => [MonthlyPointDto])
-  monthlySeries!: MonthlyPointDto[];
+  @Field(() => DashboardGranularityEnum)
+  granularity!: DashboardGranularityEnum;
+
+  @Field(() => [TimeSeriesPointDto])
+  timeSeries!: TimeSeriesPointDto[];
 
   @Field(() => [SalesChannelDto])
   salesByChannel!: SalesChannelDto[];
