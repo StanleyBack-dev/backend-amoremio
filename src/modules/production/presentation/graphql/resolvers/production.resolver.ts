@@ -263,4 +263,22 @@ export class ProductionResolver {
       RESPONSE_MESSAGES.production.orderCancelled,
     );
   }
+
+  @Mutation(() => ProductionOrderMutationResponseDto, {
+    name: "syncProductionOrderWithRecipe",
+  })
+  async syncProductionOrderWithRecipe(
+    @CurrentUser() user: AuthenticatedUser,
+    @Args("input") input: ProductionOrderScopeInputDto,
+  ) {
+    const synced = await this.orderCrud.syncWithRecipe(
+      user.idUsers,
+      input.idStore,
+      input.idProductionOrder,
+    );
+    return buildDataResponse(
+      ProductionOrderResponseDto.fromView(synced),
+      RESPONSE_MESSAGES.production.orderSynced,
+    );
+  }
 }

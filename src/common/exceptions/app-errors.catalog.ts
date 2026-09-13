@@ -13,6 +13,7 @@ import { purchasingErrors } from "@/common/exceptions/catalogs/purchasing-errors
 import { rateLimitErrors } from "@/common/exceptions/catalogs/rate-limit-errors.catalog";
 import { salesErrors } from "@/common/exceptions/catalogs/sales-errors.catalog";
 import { sharedErrors } from "@/common/exceptions/catalogs/shared-errors.catalog";
+import { shoppingListErrors } from "@/common/exceptions/catalogs/shopping-list-errors.catalog";
 import { storesErrors } from "@/common/exceptions/catalogs/stores-errors.catalog";
 import { suppliersErrors } from "@/common/exceptions/catalogs/suppliers-errors.catalog";
 import { usersErrors } from "@/common/exceptions/catalogs/users-errors.catalog";
@@ -28,6 +29,7 @@ export const APP_ERRORS = {
   purchasing: purchasingErrors,
   sales: salesErrors,
   shared: sharedErrors,
+  shoppingList: shoppingListErrors,
   stores: storesErrors,
   suppliers: suppliersErrors,
   users: usersErrors,

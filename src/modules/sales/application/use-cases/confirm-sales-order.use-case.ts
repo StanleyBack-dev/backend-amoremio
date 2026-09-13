@@ -58,9 +58,10 @@ export class ConfirmSalesOrderUseCase {
       throw AppException.from(APP_ERRORS.sales.emptyOrder, undefined);
     }
 
-    // Only kinds that actually hold stock are checked and moved. Finished
-    // goods (PRODUTO_FINAL) generate revenue but do not touch stock until a
-    // production context exists.
+    // Only kinds that actually hold stock are checked and moved —
+    // PRODUTO_FINAL and REVENDA alike, both decremented straight from
+    // whatever is on hand (however it got there: production, purchase, or a
+    // manual adjustment). Recipe inputs never reach a sale directly.
     const stockMovingItems = order.items.filter((item) =>
       STOCK_MOVING_ON_SALE_KINDS.includes(item.productKind),
     );

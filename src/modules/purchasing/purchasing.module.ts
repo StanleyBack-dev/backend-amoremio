@@ -40,5 +40,8 @@ import "@/modules/purchasing/presentation/graphql/enums/purchasing-graphql.enums
     CancelPurchaseUseCase,
     PurchasesResolver,
   ],
+  // Lets other modules (e.g. shopping-list, linking a list to a new draft)
+  // create a purchase through this use-case instead of touching its tables.
+  exports: [CreatePurchaseDraftUseCase],
 })
 export class PurchasingModule {}

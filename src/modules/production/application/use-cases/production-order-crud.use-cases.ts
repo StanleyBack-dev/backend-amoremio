@@ -254,6 +254,48 @@ export class ProductionOrderCrudUseCases {
     });
   }
 
+  // Re-explodes the recipe as it stands right now and replaces the order's
+  // items with it — for when the recipe was edited after this draft was
+  // created and the change (new/removed/changed-quantity ingredient) never
+  // reached this order's cost preview. Labor/overhead are left untouched;
+  // `actualOutputQuantity` only follows the new plan if it hadn't already
+  // been manually overridden away from the old plan.
+  async syncWithRecipe(
+    userId: string,
+    idStore: string,
+    idProductionOrder: string,
+  ): Promise<ProductionOrderView> {
+    await this.assertRegister(userId, idStore);
+    const order = await loadProductionOrderOrFail(
+      this.orderRepository,
+      idStore,
+      idProductionOrder,
+    );
+    assertDraft(order);
+
+    const recipe = await loadRecipeOrFail(
+      this.recipeRepository,
+      idStore,
+      order.idRecipe,
+    );
+    if (recipe.items.length === 0) {
+      throw AppException.from(APP_ERRORS.production.emptyOrder, undefined);
+    }
+    const exploded = explodeRecipe(recipe, order.batches);
+
+    const actualOutputQuantity =
+      Math.abs(order.actualOutputQuantity - order.plannedOutputQuantity) < 0.001
+        ? exploded.plannedOutputQuantity
+        : undefined;
+
+    return this.orderRepository.updateOrder({
+      idProductionOrder,
+      plannedOutputQuantity: exploded.plannedOutputQuantity,
+      actualOutputQuantity,
+      items: exploded.items,
+    });
+  }
+
   async cancel(
     userId: string,
     idStore: string,

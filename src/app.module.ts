@@ -26,6 +26,7 @@ import { PdfGeneratorModule } from "@/modules/pdf-generator/pdf-generator.module
 import { ProductionModule } from "@/modules/production/production.module";
 import { PurchasingModule } from "@/modules/purchasing/purchasing.module";
 import { SalesModule } from "@/modules/sales/sales.module";
+import { ShoppingListModule } from "@/modules/shopping-list/shopping-list.module";
 import { StoresModule } from "@/modules/stores/stores.module";
 import { SuppliersModule } from "@/modules/suppliers/suppliers.module";
 import { UsersModule } from "@/modules/users/users.module";
@@ -54,6 +55,7 @@ import { UsersModule } from "@/modules/users/users.module";
     SuppliersModule,
     InventoryModule,
     PurchasingModule,
+    ShoppingListModule,
     SalesModule,
     ProductionModule,
     FinanceDashboardModule,
