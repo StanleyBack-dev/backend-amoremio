@@ -118,6 +118,28 @@ export const RESPONSE_MESSAGES = {
       message: "Compras carregadas com sucesso.",
     },
   },
+  shoppingList: {
+    created: {
+      code: "SHOPPING_LIST_CREATED",
+      message: "Lista de compras criada.",
+    },
+    updated: {
+      code: "SHOPPING_LIST_UPDATED",
+      message: "Lista de compras atualizada com sucesso.",
+    },
+    converted: {
+      code: "SHOPPING_LIST_CONVERTED",
+      message: "Lista convertida em rascunho de compra.",
+    },
+    cancelled: {
+      code: "SHOPPING_LIST_CANCELLED",
+      message: "Lista de compras cancelada.",
+    },
+    listed: {
+      code: "SHOPPING_LISTS_LISTED",
+      message: "Listas de compras carregadas com sucesso.",
+    },
+  },
   sales: {
     created: {
       code: "SALES_ORDER_CREATED",
@@ -164,6 +186,10 @@ export const RESPONSE_MESSAGES = {
     orderConcluded: {
       code: "PRODUCTION_ORDER_CONCLUDED",
       message: "Produção concluída — estoque atualizado.",
+    },
+    orderSynced: {
+      code: "PRODUCTION_ORDER_SYNCED",
+      message: "Produção sincronizada com a receita atual.",
     },
     orderCancelled: {
       code: "PRODUCTION_ORDER_CANCELLED",

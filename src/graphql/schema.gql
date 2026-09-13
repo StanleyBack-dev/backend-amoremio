@@ -635,6 +635,56 @@ type SalesOrderMutationResponseDto {
   data: SalesOrderResponseDto!
 }
 
+type ShoppingListItemResponseDto {
+  idShoppingListItem: String!
+  idProduct: String!
+  productName: String!
+  unit: String!
+  desiredQuantity: Float!
+  note: String
+  purchased: Boolean!
+}
+
+type ShoppingListResponseDto {
+  idShoppingList: String!
+  idStore: String!
+  name: String
+  status: ShoppingListStatus!
+  notes: String
+  convertedToPurchaseId: String
+  createdByUserId: String!
+  createdByUserName: String
+  convertedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  items: [ShoppingListItemResponseDto!]!
+}
+
+enum ShoppingListStatus {
+  ABERTA
+  CONVERTIDA
+  CANCELADA
+}
+
+type ListShoppingListsResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  items: [ShoppingListResponseDto!]!
+  total: Int!
+  currentPage: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+}
+
+type ShoppingListMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: ShoppingListResponseDto!
+}
+
 type SupplierResponseDto {
   idSupplier: String!
   idStore: String!
@@ -815,6 +865,9 @@ type Query {
   getStorePurchases(input: ListPurchasesInputDto!): ListPurchasesResponseDto!
   getStorePurchaseFilterOptions(input: GetPurchaseFilterOptionsInputDto!): PurchaseFilterOptionsDto!
   getPurchaseById(input: PurchaseScopeInputDto!): PurchaseResponseDto!
+  getStoreShoppingLists(input: ListShoppingListsInputDto!): ListShoppingListsResponseDto!
+  getShoppingListById(input: ShoppingListScopeInputDto!): ShoppingListResponseDto!
+  getShoppingListByPurchaseId(input: GetShoppingListByPurchaseIdInputDto!): ShoppingListResponseDto
   getStoreSalesOrders(input: ListSalesOrdersInputDto!): ListSalesOrdersResponseDto!
   getStoreSalesOrderFilterOptions(input: GetSalesOrderFilterOptionsInputDto!): SalesOrderFilterOptionsDto!
   getSalesOrderById(input: SalesOrderScopeInputDto!): SalesOrderResponseDto!
@@ -949,6 +1002,24 @@ input PurchaseScopeInputDto {
   idPurchase: String!
 }
 
+input ListShoppingListsInputDto {
+  idStore: String!
+  page: Int
+  limit: Int
+  status: ShoppingListStatus
+  createdByUserId: String
+}
+
+input ShoppingListScopeInputDto {
+  idStore: String!
+  idShoppingList: String!
+}
+
+input GetShoppingListByPurchaseIdInputDto {
+  idStore: String!
+  idPurchase: String!
+}
+
 input ListSalesOrdersInputDto {
   idStore: String!
   page: Int
@@ -1037,6 +1108,13 @@ type Mutation {
   removePurchaseItem(input: RemovePurchaseItemInputDto!): PurchaseMutationResponseDto!
   finalizePurchase(input: PurchaseScopeInputDto!): PurchaseMutationResponseDto!
   cancelPurchase(input: PurchaseScopeInputDto!): PurchaseMutationResponseDto!
+  createShoppingList(input: CreateShoppingListInputDto!): ShoppingListMutationResponseDto!
+  addShoppingListItem(input: AddShoppingListItemInputDto!): ShoppingListMutationResponseDto!
+  addShoppingListItems(input: AddShoppingListItemsInputDto!): ShoppingListMutationResponseDto!
+  updateShoppingListItem(input: UpdateShoppingListItemInputDto!): ShoppingListMutationResponseDto!
+  removeShoppingListItem(input: RemoveShoppingListItemInputDto!): ShoppingListMutationResponseDto!
+  cancelShoppingList(input: ShoppingListScopeInputDto!): ShoppingListMutationResponseDto!
+  convertShoppingListToPurchase(input: ShoppingListScopeInputDto!): ShoppingListMutationResponseDto!
   createSalesOrder(input: CreateSalesOrderInputDto!): SalesOrderMutationResponseDto!
   updateSalesOrderHeader(input: UpdateSalesOrderHeaderInputDto!): SalesOrderMutationResponseDto!
   addSalesOrderItem(input: AddSalesOrderItemInputDto!): SalesOrderMutationResponseDto!
@@ -1054,6 +1132,7 @@ type Mutation {
   updateProductionOrder(input: UpdateProductionOrderInputDto!): ProductionOrderMutationResponseDto!
   completeProductionOrder(input: ProductionOrderScopeInputDto!): ProductionOrderMutationResponseDto!
   cancelProductionOrder(input: ProductionOrderScopeInputDto!): ProductionOrderMutationResponseDto!
+  syncProductionOrderWithRecipe(input: ProductionOrderScopeInputDto!): ProductionOrderMutationResponseDto!
   acceptTermsOfUse: LogoutResponseDto!
 }
 
@@ -1272,6 +1351,47 @@ input RemovePurchaseItemInputDto {
   idStore: String!
   idPurchase: String!
   idPurchaseItem: String!
+}
+
+input CreateShoppingListInputDto {
+  idStore: String!
+  name: String
+  notes: String
+}
+
+input AddShoppingListItemInputDto {
+  idStore: String!
+  idShoppingList: String!
+  idProduct: String!
+  desiredQuantity: Float!
+  note: String
+}
+
+input AddShoppingListItemsInputDto {
+  idStore: String!
+  idShoppingList: String!
+  items: [ShoppingListItemEntryInputDto!]!
+}
+
+input ShoppingListItemEntryInputDto {
+  idProduct: String!
+  desiredQuantity: Float!
+  note: String
+}
+
+input UpdateShoppingListItemInputDto {
+  idStore: String!
+  idShoppingList: String!
+  idShoppingListItem: String!
+  desiredQuantity: Float
+  note: String
+  purchased: Boolean
+}
+
+input RemoveShoppingListItemInputDto {
+  idStore: String!
+  idShoppingList: String!
+  idShoppingListItem: String!
 }
 
 input CreateSalesOrderInputDto {
