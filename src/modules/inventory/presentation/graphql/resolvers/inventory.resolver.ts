@@ -78,6 +78,7 @@ export class InventoryResolver {
       {
         idProduct: input.idProduct,
         type: input.type,
+        sourceId: input.sourceId,
         page: input.page,
         limit: input.limit,
       },
