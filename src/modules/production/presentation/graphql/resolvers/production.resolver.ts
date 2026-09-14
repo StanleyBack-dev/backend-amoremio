@@ -1,9 +1,11 @@
 import { Args, Mutation, Query, Resolver } from "@nestjs/graphql";
 import { CurrentUser } from "@/common/decorators/current-user.decorator";
 import { RESPONSE_MESSAGES } from "@/common/responses/catalogs/response-messages.catalog";
+import { SuccessResponseDto } from "@/common/responses/dtos/success-response.dto";
 import {
   buildDataResponse,
   buildPaginatedListResponse,
+  buildSuccessResponse,
 } from "@/common/responses/helpers/response.helper";
 import type { AuthenticatedUser } from "@/modules/auth/domain/interfaces/auth-token-payload.interface";
 import { RecipeCrudUseCases } from "@/modules/production/application/use-cases/recipe-crud.use-cases";
@@ -150,6 +152,15 @@ export class ProductionResolver {
       RecipeResponseDto.fromView(updated),
       RESPONSE_MESSAGES.production.recipeUpdated,
     );
+  }
+
+  @Mutation(() => SuccessResponseDto, { name: "deleteRecipe" })
+  async deleteRecipe(
+    @CurrentUser() user: AuthenticatedUser,
+    @Args("input") input: RecipeScopeInputDto,
+  ) {
+    await this.recipeCrud.delete(user.idUsers, input.idStore, input.idRecipe);
+    return buildSuccessResponse(RESPONSE_MESSAGES.production.recipeDeleted);
   }
 
   // --- Production orders ----------------------------------------------

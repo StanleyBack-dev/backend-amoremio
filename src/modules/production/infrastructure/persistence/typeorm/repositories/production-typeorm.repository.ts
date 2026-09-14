@@ -206,6 +206,16 @@ export class ProductionTypeormRepository
     return this.loadRecipeView(idRecipe);
   }
 
+  async deleteRecipe(idRecipe: string): Promise<void> {
+    // No FK/cascade between the two tables — delete the child rows first,
+    // both inside one transaction so a failure never leaves the recipe
+    // gone but its items behind (or vice versa).
+    await this.dataSource.transaction(async (manager) => {
+      await manager.delete(RecipeItemEntity, { idRecipe });
+      await manager.delete(RecipeEntity, { idRecipe });
+    });
+  }
+
   // --- Production orders --------------------------------------------------
 
   async createOrder(

@@ -8,6 +8,7 @@ import {
 } from "@/modules/catalog/application/ports/product-repository.port";
 import { SELLABLE_KINDS } from "@/modules/catalog/domain/enums/product-kind.enum";
 import { SalesChannel } from "@/modules/sales/domain/enums/sales-channel.enum";
+import { SalesOrderStatus } from "@/modules/sales/domain/enums/sales-order-status.enum";
 import { StoreAuthorizationService } from "@/modules/stores/application/use-cases/store-authorization.use-case";
 import { StorePermission } from "@/modules/stores/domain/enums/store-permission.enum";
 import {
@@ -131,7 +132,26 @@ export class SalesOrderCrudUseCases {
       command.idStore,
       command.idSalesOrder,
     );
-    assertOpen(order);
+
+    // A cancelled order is read-only. A confirmed one has everything else
+    // frozen (stock already debited, totals settled) but the sale date is
+    // just a label — kept correctable after the fact.
+    if (order.status === SalesOrderStatus.CANCELADA) {
+      throw AppException.from(APP_ERRORS.sales.notOpen, undefined);
+    }
+    if (order.status !== SalesOrderStatus.ABERTA) {
+      const touchesLockedFields =
+        command.customerName !== undefined ||
+        command.salesChannel !== undefined ||
+        command.commissionPercent !== undefined ||
+        command.discountAmount !== undefined ||
+        command.discountMode !== undefined ||
+        command.discountPercent !== undefined ||
+        command.notes !== undefined;
+      if (touchesLockedFields) {
+        throw AppException.from(APP_ERRORS.sales.headerLocked, undefined);
+      }
+    }
 
     return this.salesOrderRepository.updateHeader({
       idSalesOrder: command.idSalesOrder,

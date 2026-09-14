@@ -18,6 +18,11 @@ import {
   type RecipeView,
 } from "@/modules/production/application/ports/recipe-repository.port";
 import {
+  PRODUCTION_ORDER_REPOSITORY,
+  type ProductionOrderRepositoryPort,
+} from "@/modules/production/application/ports/production-order-repository.port";
+import { ProductionOrderStatus } from "@/modules/production/domain/enums/production-order-status.enum";
+import {
   AddRecipeItemCommand,
   AddRecipeItemsCommand,
   CreateRecipeCommand,
@@ -43,6 +48,8 @@ export class RecipeCrudUseCases {
     private readonly recipeRepository: RecipeRepositoryPort,
     @Inject(PRODUCT_REPOSITORY)
     private readonly productRepository: ProductRepositoryPort,
+    @Inject(PRODUCTION_ORDER_REPOSITORY)
+    private readonly productionOrderRepository: ProductionOrderRepositoryPort,
     private readonly storeAuthorizationService: StoreAuthorizationService,
   ) {}
 
@@ -392,6 +399,34 @@ export class RecipeCrudUseCases {
     await this.assertManage(userId, idStore);
     await loadRecipeOrFail(this.recipeRepository, idStore, idRecipe);
     return this.recipeRepository.removeRecipeItem(idRecipe, idRecipeItem);
+  }
+
+  // Hard delete — the recipe and its ingredient rows are gone for good.
+  // Blocked while any RASCUNHO production order still points at it: editing
+  // that order later (changing batches, or "Sincronizar com a receita")
+  // re-fetches the recipe and would fail with a confusing not-found error.
+  // Concluded/cancelled orders are untouched — they already snapshot
+  // everything they need and never look the recipe up again.
+  async delete(
+    userId: string,
+    idStore: string,
+    idRecipe: string,
+  ): Promise<void> {
+    await this.assertManage(userId, idStore);
+    await loadRecipeOrFail(this.recipeRepository, idStore, idRecipe);
+
+    const { total } = await this.productionOrderRepository.listOrdersByStore(
+      idStore,
+      { idRecipe, status: ProductionOrderStatus.RASCUNHO, limit: 1 },
+    );
+    if (total > 0) {
+      throw AppException.from(
+        APP_ERRORS.production.recipeHasOpenOrders,
+        undefined,
+      );
+    }
+
+    await this.recipeRepository.deleteRecipe(idRecipe);
   }
 
   // Walks the recipe tree under `startProductId` and returns true if it

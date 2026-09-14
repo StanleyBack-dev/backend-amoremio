@@ -89,6 +89,7 @@ export interface RecipeRepositoryPort {
   addRecipeItems(payload: AddRecipeItemsPayload): Promise<RecipeView>;
   updateRecipeItem(payload: UpdateRecipeItemPayload): Promise<RecipeView>;
   removeRecipeItem(idRecipe: string, idRecipeItem: string): Promise<RecipeView>;
+  deleteRecipe(idRecipe: string): Promise<void>;
 }
 
 export const RECIPE_REPOSITORY = Symbol("RECIPE_REPOSITORY");

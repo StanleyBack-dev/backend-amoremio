@@ -16,6 +16,12 @@ export const salesErrors = {
     status: HttpStatus.CONFLICT,
     message: "Só é possível alterar uma ordem de venda aberta.",
   },
+  headerLocked: {
+    code: "SALES_HEADER_LOCKED",
+    status: HttpStatus.CONFLICT,
+    message:
+      "Depois de confirmada, só a data da venda pode ser corrigida — os demais dados ficam travados.",
+  },
   emptyOrder: {
     code: "SALES_ORDER_EMPTY",
     status: HttpStatus.CONFLICT,
