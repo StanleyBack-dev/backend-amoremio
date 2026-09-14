@@ -1,5 +1,8 @@
 import { Field, Float, InputType, Int } from "@nestjs/graphql";
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
   IsEnum,
   IsInt,
   IsNumber,
@@ -183,6 +186,41 @@ export class AddSalesOrderItemInputDto {
   @IsNumber()
   @Min(0)
   unitPrice?: number;
+}
+
+@InputType()
+export class SalesOrderItemEntryInputDto {
+  @Field()
+  @IsUUID()
+  idProduct!: string;
+
+  @Field(() => Float)
+  @IsNumber()
+  @IsPositive()
+  quantity!: number;
+
+  @Field(() => Float, { nullable: true })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  unitPrice?: number;
+}
+
+@InputType()
+export class AddSalesOrderItemsInputDto {
+  @Field()
+  @IsUUID()
+  idStore!: string;
+
+  @Field()
+  @IsUUID()
+  idSalesOrder!: string;
+
+  @Field(() => [SalesOrderItemEntryInputDto])
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(100)
+  items!: SalesOrderItemEntryInputDto[];
 }
 
 @InputType()

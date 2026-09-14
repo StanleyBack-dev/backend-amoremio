@@ -17,6 +17,7 @@ import {
 } from "@/modules/sales/presentation/graphql/dtos/sales-order-list-response.dto";
 import {
   AddSalesOrderItemInputDto,
+  AddSalesOrderItemsInputDto,
   CreateSalesOrderInputDto,
   GetSalesOrderFilterOptionsInputDto,
   ListSalesOrdersInputDto,
@@ -106,6 +107,20 @@ export class SalesOrdersResolver {
     @Args("input") input: AddSalesOrderItemInputDto,
   ) {
     const updated = await this.crud.addItem(user.idUsers, input);
+    return buildDataResponse(
+      SalesOrderResponseDto.fromView(updated),
+      RESPONSE_MESSAGES.sales.updated,
+    );
+  }
+
+  @Mutation(() => SalesOrderMutationResponseDto, {
+    name: "addSalesOrderItems",
+  })
+  async addSalesOrderItems(
+    @CurrentUser() user: AuthenticatedUser,
+    @Args("input") input: AddSalesOrderItemsInputDto,
+  ) {
+    const updated = await this.crud.addItems(user.idUsers, input);
     return buildDataResponse(
       SalesOrderResponseDto.fromView(updated),
       RESPONSE_MESSAGES.sales.updated,

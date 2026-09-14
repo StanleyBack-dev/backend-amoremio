@@ -6,6 +6,7 @@ import { APP_ERRORS } from "@/common/exceptions/app-errors.catalog";
 import { UserEntity } from "@/modules/users/infrastructure/persistence/typeorm/entities/user.entity";
 import {
   type AddSalesOrderItemPayload,
+  type AddSalesOrderItemsPayload,
   type ConfirmSalesOrderPayload,
   type CreateSalesOrderPayload,
   type ListSalesOrdersFilters,
@@ -163,6 +164,29 @@ export class SalesOrderTypeormRepository implements SalesOrderRepositoryPort {
         lineTotal: payload.lineTotal.toFixed(2),
       }),
     );
+    await this.recomputeSubtotal(payload.idSalesOrder);
+    return this.loadView(payload.idSalesOrder);
+  }
+
+  // Bulk counterpart to addItem — one insert instead of the client driving
+  // N sequential addItem round-trips, and recomputeSubtotal (which re-derives
+  // from every current item, not incrementally) runs once at the end either
+  // way, so batching every insert first is free.
+  async addItems(payload: AddSalesOrderItemsPayload): Promise<SalesOrderView> {
+    await this.getOrFail(payload.idSalesOrder);
+    if (payload.items.length > 0) {
+      await this.itemRepository.insert(
+        payload.items.map((item) => ({
+          idSalesOrder: payload.idSalesOrder,
+          idProduct: item.idProduct,
+          productName: item.productName,
+          productKind: item.productKind,
+          quantity: item.quantity.toFixed(3),
+          unitPrice: item.unitPrice.toFixed(2),
+          lineTotal: item.lineTotal.toFixed(2),
+        })),
+      );
+    }
     await this.recomputeSubtotal(payload.idSalesOrder);
     return this.loadView(payload.idSalesOrder);
   }

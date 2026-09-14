@@ -136,3 +136,81 @@ export class UpdateProductionOrderInputDto {
   @MaxLength(500)
   notes?: string;
 }
+
+@InputType()
+export class AddProductionOrderOutputInputDto {
+  @Field()
+  @IsUUID()
+  idStore!: string;
+
+  @Field()
+  @IsUUID()
+  idProductionOrder!: string;
+
+  @Field()
+  @IsUUID()
+  idProduct!: string;
+
+  @Field(() => Float)
+  @IsNumber()
+  @IsPositive()
+  quantity!: number;
+}
+
+@InputType()
+export class RemoveProductionOrderOutputInputDto {
+  @Field()
+  @IsUUID()
+  idStore!: string;
+
+  @Field()
+  @IsUUID()
+  idProductionOrder!: string;
+
+  @Field()
+  @IsUUID()
+  idProductionOrderOutput!: string;
+}
+
+@InputType()
+export class AddProductionOrderOutputExtraInputDto {
+  @Field()
+  @IsUUID()
+  idStore!: string;
+
+  @Field()
+  @IsUUID()
+  idProductionOrder!: string;
+
+  @Field()
+  @IsUUID()
+  idProductionOrderOutput!: string;
+
+  @Field()
+  @IsUUID()
+  idProduct!: string;
+
+  @Field(() => Float)
+  @IsNumber()
+  @IsPositive()
+  quantity!: number;
+}
+
+@InputType()
+export class RemoveProductionOrderOutputExtraInputDto {
+  @Field()
+  @IsUUID()
+  idStore!: string;
+
+  @Field()
+  @IsUUID()
+  idProductionOrder!: string;
+
+  @Field()
+  @IsUUID()
+  idProductionOrderOutput!: string;
+
+  @Field()
+  @IsUUID()
+  idProductionOrderOutputExtra!: string;
+}

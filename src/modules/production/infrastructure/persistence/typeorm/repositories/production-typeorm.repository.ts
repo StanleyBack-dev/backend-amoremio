@@ -16,11 +16,16 @@ import {
   type UpdateRecipePayload,
 } from "@/modules/production/application/ports/recipe-repository.port";
 import {
+  type AddProductionOrderOutputExtraPayload,
+  type AddProductionOrderOutputPayload,
   type CompleteProductionOrderPayload,
   type CreateProductionOrderPayload,
+  type DuplicateProductionOrderPayload,
   type ListProductionOrdersFilters,
   type ProductionOrderFilterOptions,
   type ProductionOrderItemView,
+  type ProductionOrderOutputExtraView,
+  type ProductionOrderOutputView,
   type ProductionOrderRepositoryPort,
   type ProductionOrderView,
   type UpdateProductionOrderPayload,
@@ -30,6 +35,8 @@ import { RecipeEntity } from "@/modules/production/infrastructure/persistence/ty
 import { RecipeItemEntity } from "@/modules/production/infrastructure/persistence/typeorm/entities/recipe-item.entity";
 import { ProductionOrderEntity } from "@/modules/production/infrastructure/persistence/typeorm/entities/production-order.entity";
 import { ProductionOrderItemEntity } from "@/modules/production/infrastructure/persistence/typeorm/entities/production-order-item.entity";
+import { ProductionOrderOutputEntity } from "@/modules/production/infrastructure/persistence/typeorm/entities/production-order-output.entity";
+import { ProductionOrderOutputExtraEntity } from "@/modules/production/infrastructure/persistence/typeorm/entities/production-order-output-extra.entity";
 
 @Injectable()
 export class ProductionTypeormRepository
@@ -44,6 +51,10 @@ export class ProductionTypeormRepository
     private readonly orderRepository: Repository<ProductionOrderEntity>,
     @InjectRepository(ProductionOrderItemEntity)
     private readonly orderItemRepository: Repository<ProductionOrderItemEntity>,
+    @InjectRepository(ProductionOrderOutputEntity)
+    private readonly orderOutputRepository: Repository<ProductionOrderOutputEntity>,
+    @InjectRepository(ProductionOrderOutputExtraEntity)
+    private readonly orderOutputExtraRepository: Repository<ProductionOrderOutputExtraEntity>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -243,6 +254,80 @@ export class ProductionTypeormRepository
     return this.loadOrderView(saved.idProductionOrder);
   }
 
+  // Same shape as createOrder, plus the output/extra rows — all inside one
+  // transaction so the client gets a single round-trip instead of the
+  // create + N outputs + M extras it would otherwise take one at a time.
+  async duplicateOrder(
+    payload: DuplicateProductionOrderPayload,
+  ): Promise<ProductionOrderView> {
+    const idProductionOrder = await this.dataSource.transaction(
+      async (manager) => {
+        const order = await manager.save(
+          manager.create(ProductionOrderEntity, {
+            idStore: payload.idStore,
+            idRecipe: payload.idRecipe,
+            recipeName: payload.recipeName,
+            idOutputProduct: payload.idOutputProduct,
+            outputProductName: payload.outputProductName,
+            productionDate: payload.productionDate,
+            status: ProductionOrderStatus.RASCUNHO,
+            batches: payload.batches.toFixed(3),
+            plannedOutputQuantity: payload.plannedOutputQuantity.toFixed(3),
+            actualOutputQuantity: payload.actualOutputQuantity.toFixed(3),
+            laborCost: payload.laborCost.toFixed(2),
+            overheadCost: payload.overheadCost.toFixed(2),
+            notes: payload.notes,
+            createdByUserId: payload.createdByUserId,
+          }),
+        );
+
+        if (payload.items.length > 0) {
+          await manager.save(
+            payload.items.map((item) =>
+              manager.create(ProductionOrderItemEntity, {
+                idProductionOrder: order.idProductionOrder,
+                idProduct: item.idProduct,
+                productName: item.productName,
+                quantity: item.quantity.toFixed(3),
+                unit: item.unit,
+              }),
+            ),
+          );
+        }
+
+        for (const output of payload.outputs) {
+          const savedOutput = await manager.save(
+            manager.create(ProductionOrderOutputEntity, {
+              idProductionOrder: order.idProductionOrder,
+              idProduct: output.idProduct,
+              productName: output.productName,
+              quantity: output.quantity.toFixed(3),
+              unitCost: "0",
+            }),
+          );
+          if (output.extras.length > 0) {
+            await manager.save(
+              output.extras.map((extra) =>
+                manager.create(ProductionOrderOutputExtraEntity, {
+                  idProductionOrderOutput: savedOutput.idProductionOrderOutput,
+                  idProduct: extra.idProduct,
+                  productName: extra.productName,
+                  quantity: extra.quantity.toFixed(3),
+                  unitCostAtConsumption: "0",
+                  lineCost: "0",
+                }),
+              ),
+            );
+          }
+        }
+
+        return order.idProductionOrder;
+      },
+    );
+
+    return this.loadOrderView(idProductionOrder);
+  }
+
   async findOrderById(
     idStore: string,
     idProductionOrder: string,
@@ -266,26 +351,115 @@ export class ProductionTypeormRepository
   async completeOrder(
     payload: CompleteProductionOrderPayload,
   ): Promise<ProductionOrderView> {
-    const order = await this.getOrderOrFail(payload.idProductionOrder);
-    order.status = ProductionOrderStatus.CONCLUIDA;
-    order.inputsCost = payload.inputsCost.toFixed(4);
-    order.totalCost = payload.totalCost.toFixed(4);
-    order.outputUnitCost = payload.outputUnitCost.toFixed(4);
-    order.actualOutputQuantity = payload.actualOutputQuantity.toFixed(3);
-    order.concludedAt = payload.concludedAt;
-    await this.orderRepository.save(order);
-
-    for (const frozen of payload.items) {
-      await this.orderItemRepository.update(
-        { idProductionOrderItem: frozen.idProductionOrderItem },
-        {
-          unitCostAtConsumption: frozen.unitCostAtConsumption.toFixed(6),
-          lineCost: frozen.lineCost.toFixed(4),
-        },
+    await this.dataSource.transaction(async (manager) => {
+      const orderRepo = manager.getRepository(ProductionOrderEntity);
+      const itemRepo = manager.getRepository(ProductionOrderItemEntity);
+      const outputRepo = manager.getRepository(ProductionOrderOutputEntity);
+      const outputExtraRepo = manager.getRepository(
+        ProductionOrderOutputExtraEntity,
       );
-    }
+
+      const order = await orderRepo.findOneOrFail({
+        where: { idProductionOrder: payload.idProductionOrder },
+      });
+      order.status = ProductionOrderStatus.CONCLUIDA;
+      order.inputsCost = payload.inputsCost.toFixed(4);
+      order.totalCost = payload.totalCost.toFixed(4);
+      order.outputUnitCost = payload.outputUnitCost.toFixed(4);
+      order.actualOutputQuantity = payload.actualOutputQuantity.toFixed(3);
+      order.concludedAt = payload.concludedAt;
+      await orderRepo.save(order);
+
+      for (const frozen of payload.items) {
+        await itemRepo.update(
+          { idProductionOrderItem: frozen.idProductionOrderItem },
+          {
+            unitCostAtConsumption: frozen.unitCostAtConsumption.toFixed(6),
+            lineCost: frozen.lineCost.toFixed(4),
+          },
+        );
+      }
+
+      for (const output of payload.outputs) {
+        await outputRepo.update(
+          { idProductionOrderOutput: output.idProductionOrderOutput },
+          { unitCost: output.unitCost.toFixed(6) },
+        );
+        for (const extra of output.extras) {
+          await outputExtraRepo.update(
+            {
+              idProductionOrderOutputExtra: extra.idProductionOrderOutputExtra,
+            },
+            {
+              unitCostAtConsumption: extra.unitCostAtConsumption.toFixed(6),
+              lineCost: extra.lineCost.toFixed(4),
+            },
+          );
+        }
+      }
+    });
 
     return this.loadOrderView(payload.idProductionOrder);
+  }
+
+  async addOutput(
+    payload: AddProductionOrderOutputPayload,
+  ): Promise<ProductionOrderView> {
+    await this.orderOutputRepository.save(
+      this.orderOutputRepository.create({
+        idProductionOrder: payload.idProductionOrder,
+        idProduct: payload.idProduct,
+        productName: payload.productName,
+        quantity: payload.quantity.toFixed(3),
+        unitCost: "0",
+      }),
+    );
+    return this.loadOrderView(payload.idProductionOrder);
+  }
+
+  async removeOutput(
+    idProductionOrder: string,
+    idProductionOrderOutput: string,
+  ): Promise<ProductionOrderView> {
+    await this.dataSource.transaction(async (manager) => {
+      await manager.delete(ProductionOrderOutputExtraEntity, {
+        idProductionOrderOutput,
+      });
+      await manager.delete(ProductionOrderOutputEntity, {
+        idProductionOrderOutput,
+        idProductionOrder,
+      });
+    });
+    return this.loadOrderView(idProductionOrder);
+  }
+
+  async addOutputExtra(
+    idProductionOrder: string,
+    payload: AddProductionOrderOutputExtraPayload,
+  ): Promise<ProductionOrderView> {
+    await this.orderOutputExtraRepository.save(
+      this.orderOutputExtraRepository.create({
+        idProductionOrderOutput: payload.idProductionOrderOutput,
+        idProduct: payload.idProduct,
+        productName: payload.productName,
+        quantity: payload.quantity.toFixed(3),
+        unitCostAtConsumption: "0",
+        lineCost: "0",
+      }),
+    );
+    return this.loadOrderView(idProductionOrder);
+  }
+
+  async removeOutputExtra(
+    idProductionOrder: string,
+    idProductionOrderOutput: string,
+    idProductionOrderOutputExtra: string,
+  ): Promise<ProductionOrderView> {
+    await this.orderOutputExtraRepository.delete({
+      idProductionOrderOutputExtra,
+      idProductionOrderOutput,
+    });
+    return this.loadOrderView(idProductionOrder);
   }
 
   async listOrdersByStore(
@@ -326,22 +500,23 @@ export class ProductionTypeormRepository
       return { records: [], total };
     }
 
-    const items = await this.orderItemRepository.find({
-      where: {
-        idProductionOrder: In(rows.map((row) => row.idProductionOrder)),
-      },
-      order: { createdAt: "ASC" },
-    });
+    const idProductionOrders = rows.map((row) => row.idProductionOrder);
+    const [items, outputs, creatorNames] = await Promise.all([
+      this.orderItemRepository.find({
+        where: { idProductionOrder: In(idProductionOrders) },
+        order: { createdAt: "ASC" },
+      }),
+      this.loadOutputsForOrders(idProductionOrders),
+      this.resolveCreatorNames(rows.map((row) => row.createdByUserId)),
+    ]);
     const itemsByOrder = groupBy(items, (item) => item.idProductionOrder);
-    const creatorNames = await this.resolveCreatorNames(
-      rows.map((row) => row.createdByUserId),
-    );
 
     return {
       records: rows.map((row) =>
         this.mapOrderView(
           row,
           itemsByOrder.get(row.idProductionOrder) ?? [],
+          outputs.get(row.idProductionOrder) ?? [],
           creatorNames.get(row.createdByUserId) ?? null,
         ),
       ),
@@ -476,15 +651,75 @@ export class ProductionTypeormRepository
     idProductionOrder: string,
   ): Promise<ProductionOrderView> {
     const order = await this.getOrderOrFail(idProductionOrder);
-    const items = await this.orderItemRepository.find({
-      where: { idProductionOrder },
-      order: { createdAt: "ASC" },
-    });
+    const [items, outputsByOrder] = await Promise.all([
+      this.orderItemRepository.find({
+        where: { idProductionOrder },
+        order: { createdAt: "ASC" },
+      }),
+      this.loadOutputsForOrders([idProductionOrder]),
+    ]);
     const creatorName =
       (await this.resolveCreatorNames([order.createdByUserId])).get(
         order.createdByUserId,
       ) ?? null;
-    return this.mapOrderView(order, items, creatorName);
+    return this.mapOrderView(
+      order,
+      items,
+      outputsByOrder.get(idProductionOrder) ?? [],
+      creatorName,
+    );
+  }
+
+  // One round-trip for the output lines, one for their extras, grouped by
+  // production order and then by output line.
+  private async loadOutputsForOrders(
+    idProductionOrders: string[],
+  ): Promise<Map<string, ProductionOrderOutputView[]>> {
+    const result = new Map<string, ProductionOrderOutputView[]>();
+    if (idProductionOrders.length === 0) return result;
+
+    const outputs = await this.orderOutputRepository.find({
+      where: { idProductionOrder: In(idProductionOrders) },
+      order: { createdAt: "ASC" },
+    });
+    if (outputs.length === 0) return result;
+
+    const extras = await this.orderOutputExtraRepository.find({
+      where: {
+        idProductionOrderOutput: In(
+          outputs.map((output) => output.idProductionOrderOutput),
+        ),
+      },
+      order: { createdAt: "ASC" },
+    });
+    const extrasByOutput = groupBy(
+      extras,
+      (extra) => extra.idProductionOrderOutput,
+    );
+
+    for (const output of outputs) {
+      const view: ProductionOrderOutputView = {
+        idProductionOrderOutput: output.idProductionOrderOutput,
+        idProduct: output.idProduct,
+        productName: output.productName,
+        quantity: Number(output.quantity),
+        unitCost: Number(output.unitCost),
+        extras: (extrasByOutput.get(output.idProductionOrderOutput) ?? []).map(
+          (extra): ProductionOrderOutputExtraView => ({
+            idProductionOrderOutputExtra: extra.idProductionOrderOutputExtra,
+            idProduct: extra.idProduct,
+            productName: extra.productName,
+            quantity: Number(extra.quantity),
+            unitCostAtConsumption: Number(extra.unitCostAtConsumption),
+            lineCost: Number(extra.lineCost),
+          }),
+        ),
+      };
+      const list = result.get(output.idProductionOrder) ?? [];
+      list.push(view);
+      result.set(output.idProductionOrder, list);
+    }
+    return result;
   }
 
   private async resolveCreatorNames(
@@ -538,6 +773,7 @@ export class ProductionTypeormRepository
   private mapOrderView(
     entity: ProductionOrderEntity,
     items: ProductionOrderItemEntity[],
+    outputs: ProductionOrderOutputView[],
     creatorName: string | null,
   ): ProductionOrderView {
     return {
@@ -564,6 +800,7 @@ export class ProductionTypeormRepository
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       items: items.map((item) => this.mapOrderItemView(item)),
+      outputs,
     };
   }
 

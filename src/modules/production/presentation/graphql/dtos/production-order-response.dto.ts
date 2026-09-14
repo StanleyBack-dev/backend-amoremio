@@ -1,6 +1,8 @@
 import { Field, Float, ObjectType } from "@nestjs/graphql";
 import type {
   ProductionOrderItemView,
+  ProductionOrderOutputExtraView,
+  ProductionOrderOutputView,
   ProductionOrderView,
 } from "@/modules/production/application/ports/production-order-repository.port";
 import { ProductionOrderStatus } from "@/modules/production/domain/enums/production-order-status.enum";
@@ -44,6 +46,76 @@ export class ProductionOrderItemResponseDto {
 }
 
 @ObjectType()
+export class ProductionOrderOutputExtraResponseDto {
+  static fromView(
+    view: ProductionOrderOutputExtraView,
+  ): ProductionOrderOutputExtraResponseDto {
+    const dto = new ProductionOrderOutputExtraResponseDto();
+    dto.idProductionOrderOutputExtra = view.idProductionOrderOutputExtra;
+    dto.idProduct = view.idProduct;
+    dto.productName = view.productName;
+    dto.quantity = view.quantity;
+    dto.unitCostAtConsumption = view.unitCostAtConsumption;
+    dto.lineCost = view.lineCost;
+    return dto;
+  }
+
+  @Field()
+  idProductionOrderOutputExtra!: string;
+
+  @Field()
+  idProduct!: string;
+
+  @Field()
+  productName!: string;
+
+  @Field(() => Float)
+  quantity!: number;
+
+  @Field(() => Float)
+  unitCostAtConsumption!: number;
+
+  @Field(() => Float)
+  lineCost!: number;
+}
+
+@ObjectType()
+export class ProductionOrderOutputResponseDto {
+  static fromView(
+    view: ProductionOrderOutputView,
+  ): ProductionOrderOutputResponseDto {
+    const dto = new ProductionOrderOutputResponseDto();
+    dto.idProductionOrderOutput = view.idProductionOrderOutput;
+    dto.idProduct = view.idProduct;
+    dto.productName = view.productName;
+    dto.quantity = view.quantity;
+    dto.unitCost = view.unitCost;
+    dto.extras = view.extras.map((extra) =>
+      ProductionOrderOutputExtraResponseDto.fromView(extra),
+    );
+    return dto;
+  }
+
+  @Field()
+  idProductionOrderOutput!: string;
+
+  @Field()
+  idProduct!: string;
+
+  @Field()
+  productName!: string;
+
+  @Field(() => Float)
+  quantity!: number;
+
+  @Field(() => Float)
+  unitCost!: number;
+
+  @Field(() => [ProductionOrderOutputExtraResponseDto])
+  extras!: ProductionOrderOutputExtraResponseDto[];
+}
+
+@ObjectType()
 export class ProductionOrderResponseDto {
   static fromView(view: ProductionOrderView): ProductionOrderResponseDto {
     const dto = new ProductionOrderResponseDto();
@@ -71,6 +143,9 @@ export class ProductionOrderResponseDto {
     dto.updatedAt = view.updatedAt;
     dto.items = view.items.map((item) =>
       ProductionOrderItemResponseDto.fromView(item),
+    );
+    dto.outputs = view.outputs.map((output) =>
+      ProductionOrderOutputResponseDto.fromView(output),
     );
     return dto;
   }
@@ -143,4 +218,7 @@ export class ProductionOrderResponseDto {
 
   @Field(() => [ProductionOrderItemResponseDto])
   items!: ProductionOrderItemResponseDto[];
+
+  @Field(() => [ProductionOrderOutputResponseDto])
+  outputs!: ProductionOrderOutputResponseDto[];
 }
