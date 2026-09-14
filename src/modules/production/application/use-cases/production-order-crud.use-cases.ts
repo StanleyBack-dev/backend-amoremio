@@ -571,7 +571,10 @@ export class ProductionOrderCrudUseCases {
       (item) => item.idProductionOrderItem === idProductionOrderItem,
     );
     if (!exists) {
-      throw AppException.from(APP_ERRORS.production.orderItemNotFound, undefined);
+      throw AppException.from(
+        APP_ERRORS.production.orderItemNotFound,
+        undefined,
+      );
     }
     if (order.items.length <= 1) {
       throw AppException.from(
