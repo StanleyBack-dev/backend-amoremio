@@ -409,6 +409,24 @@ type ProductionOrderItemResponseDto {
   lineCost: Float!
 }
 
+type ProductionOrderOutputExtraResponseDto {
+  idProductionOrderOutputExtra: String!
+  idProduct: String!
+  productName: String!
+  quantity: Float!
+  unitCostAtConsumption: Float!
+  lineCost: Float!
+}
+
+type ProductionOrderOutputResponseDto {
+  idProductionOrderOutput: String!
+  idProduct: String!
+  productName: String!
+  quantity: Float!
+  unitCost: Float!
+  extras: [ProductionOrderOutputExtraResponseDto!]!
+}
+
 type ProductionOrderResponseDto {
   idProductionOrder: String!
   idStore: String!
@@ -433,6 +451,7 @@ type ProductionOrderResponseDto {
   createdAt: DateTime!
   updatedAt: DateTime!
   items: [ProductionOrderItemResponseDto!]!
+  outputs: [ProductionOrderOutputResponseDto!]!
 }
 
 enum ProductionOrderStatus {
@@ -1120,6 +1139,7 @@ type Mutation {
   createSalesOrder(input: CreateSalesOrderInputDto!): SalesOrderMutationResponseDto!
   updateSalesOrderHeader(input: UpdateSalesOrderHeaderInputDto!): SalesOrderMutationResponseDto!
   addSalesOrderItem(input: AddSalesOrderItemInputDto!): SalesOrderMutationResponseDto!
+  addSalesOrderItems(input: AddSalesOrderItemsInputDto!): SalesOrderMutationResponseDto!
   updateSalesOrderItem(input: UpdateSalesOrderItemInputDto!): SalesOrderMutationResponseDto!
   removeSalesOrderItem(input: RemoveSalesOrderItemInputDto!): SalesOrderMutationResponseDto!
   confirmSalesOrder(input: SalesOrderScopeInputDto!): SalesOrderMutationResponseDto!
@@ -1132,8 +1152,13 @@ type Mutation {
   removeRecipeItem(input: RemoveRecipeItemInputDto!): RecipeMutationResponseDto!
   deleteRecipe(input: RecipeScopeInputDto!): SuccessResponseDto!
   createProductionOrder(input: CreateProductionOrderInputDto!): ProductionOrderMutationResponseDto!
+  duplicateProductionOrder(input: ProductionOrderScopeInputDto!): ProductionOrderMutationResponseDto!
   updateProductionOrder(input: UpdateProductionOrderInputDto!): ProductionOrderMutationResponseDto!
   completeProductionOrder(input: ProductionOrderScopeInputDto!): ProductionOrderMutationResponseDto!
+  addProductionOrderOutput(input: AddProductionOrderOutputInputDto!): ProductionOrderMutationResponseDto!
+  removeProductionOrderOutput(input: RemoveProductionOrderOutputInputDto!): ProductionOrderMutationResponseDto!
+  addProductionOrderOutputExtra(input: AddProductionOrderOutputExtraInputDto!): ProductionOrderMutationResponseDto!
+  removeProductionOrderOutputExtra(input: RemoveProductionOrderOutputExtraInputDto!): ProductionOrderMutationResponseDto!
   cancelProductionOrder(input: ProductionOrderScopeInputDto!): ProductionOrderMutationResponseDto!
   syncProductionOrderWithRecipe(input: ProductionOrderScopeInputDto!): ProductionOrderMutationResponseDto!
   acceptTermsOfUse: LogoutResponseDto!
@@ -1426,6 +1451,18 @@ input AddSalesOrderItemInputDto {
   unitPrice: Float
 }
 
+input AddSalesOrderItemsInputDto {
+  idStore: String!
+  idSalesOrder: String!
+  items: [SalesOrderItemEntryInputDto!]!
+}
+
+input SalesOrderItemEntryInputDto {
+  idProduct: String!
+  quantity: Float!
+  unitPrice: Float
+}
+
 input UpdateSalesOrderItemInputDto {
   idStore: String!
   idSalesOrder: String!
@@ -1509,4 +1546,32 @@ input UpdateProductionOrderInputDto {
   laborCost: Float
   overheadCost: Float
   notes: String
+}
+
+input AddProductionOrderOutputInputDto {
+  idStore: String!
+  idProductionOrder: String!
+  idProduct: String!
+  quantity: Float!
+}
+
+input RemoveProductionOrderOutputInputDto {
+  idStore: String!
+  idProductionOrder: String!
+  idProductionOrderOutput: String!
+}
+
+input AddProductionOrderOutputExtraInputDto {
+  idStore: String!
+  idProductionOrder: String!
+  idProductionOrderOutput: String!
+  idProduct: String!
+  quantity: Float!
+}
+
+input RemoveProductionOrderOutputExtraInputDto {
+  idStore: String!
+  idProductionOrder: String!
+  idProductionOrderOutput: String!
+  idProductionOrderOutputExtra: String!
 }

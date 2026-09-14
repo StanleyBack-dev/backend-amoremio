@@ -105,4 +105,26 @@ export const productionErrors = {
     message: ({ product }: { product: string }) =>
       `Estoque de insumo insuficiente para "${product}".`,
   },
+  noOutputsProvided: {
+    code: "PRODUCTION_NO_OUTPUTS_PROVIDED",
+    status: HttpStatus.BAD_REQUEST,
+    message: "Informe ao menos um produto de saída para concluir a produção.",
+  },
+  duplicatedProductionOutput: {
+    code: "PRODUCTION_DUPLICATED_OUTPUT",
+    status: HttpStatus.CONFLICT,
+    message: ({ product }: { product: string }) =>
+      `"${product}" já está entre as saídas desta produção.`,
+  },
+  outputNotFound: {
+    code: "PRODUCTION_OUTPUT_NOT_FOUND",
+    status: HttpStatus.NOT_FOUND,
+    message: "Saída de produção não encontrada.",
+  },
+  duplicatedOutputExtra: {
+    code: "PRODUCTION_DUPLICATED_OUTPUT_EXTRA",
+    status: HttpStatus.CONFLICT,
+    message: ({ product }: { product: string }) =>
+      `"${product}" já está entre os insumos extras desta saída.`,
+  },
 } as const;

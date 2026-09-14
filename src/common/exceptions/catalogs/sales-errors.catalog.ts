@@ -60,4 +60,15 @@ export const salesErrors = {
     message:
       "Este produto não pode ser vendido. Apenas produtos finais e de revenda entram em vendas.",
   },
+  noItemsToAdd: {
+    code: "SALES_NO_ITEMS_TO_ADD",
+    status: HttpStatus.BAD_REQUEST,
+    message: "Adicione ao menos um item à lista.",
+  },
+  duplicatedItem: {
+    code: "SALES_DUPLICATED_ITEM",
+    status: HttpStatus.CONFLICT,
+    message: ({ product }: { product: string }) =>
+      `"${product}" já está na venda — ajuste a quantidade da linha existente.`,
+  },
 } as const;

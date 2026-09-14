@@ -56,13 +56,32 @@ export class CompleteProductionOrderUseCase {
     if (order.items.length === 0) {
       throw AppException.from(APP_ERRORS.production.emptyOrder, undefined);
     }
+    // Outputs (and their extras) are added one at a time before this point —
+    // see ProductionOrderCrudUseCases.addOutput/addOutputExtra — and already
+    // validated there (product exists, right kind, no duplicates). This is
+    // just the last check that at least one survived.
+    if (order.outputs.length === 0) {
+      throw AppException.from(
+        APP_ERRORS.production.noOutputsProvided,
+        undefined,
+      );
+    }
 
-    // Check every input has enough on hand and read its current average cost
-    // before touching anything — a completed order must never leave stock
-    // negative. One batched read instead of one query per item.
+    const extraProductIds = [
+      ...new Set(
+        order.outputs.flatMap((output) =>
+          output.extras.map((extra) => extra.idProduct),
+        ),
+      ),
+    ];
+
+    // Check every input (shared batch inputs + every line's extras) has
+    // enough on hand and read its current average cost before touching
+    // anything — a completed order must never leave stock negative. One
+    // batched read instead of one query per item.
     const stockByProduct = await this.inventoryRepository.getCurrentStockBatch(
       idStore,
-      order.items.map((item) => item.idProduct),
+      [...order.items.map((item) => item.idProduct), ...extraProductIds],
     );
     const priced: { ref: string; quantity: number; unitCost: number }[] = [];
     for (const item of order.items) {
@@ -80,15 +99,73 @@ export class CompleteProductionOrderUseCase {
       });
     }
 
+    // Extras are consumed once each, but the same product could appear as an
+    // extra on more than one output line — track running consumption so a
+    // second line can't "reuse" stock the first line already claimed.
+    const extraConsumed = new Map<string, number>();
+    const pricedExtrasByOutputIndex = order.outputs.map((output) =>
+      output.extras.map((extra) => {
+        const stock = stockByProduct.get(extra.idProduct);
+        const onHand = stock?.quantityOnHand ?? 0;
+        const alreadyConsumed = extraConsumed.get(extra.idProduct) ?? 0;
+        if (onHand < alreadyConsumed + extra.quantity) {
+          throw AppException.from(APP_ERRORS.production.insufficientInput, {
+            product: extra.productName,
+          });
+        }
+        extraConsumed.set(extra.idProduct, alreadyConsumed + extra.quantity);
+        const unitCost = stock?.averageCost ?? 0;
+        return {
+          idProductionOrderOutputExtra: extra.idProductionOrderOutputExtra,
+          idProduct: extra.idProduct,
+          productName: extra.productName,
+          quantity: extra.quantity,
+          unitCostAtConsumption: unitCost,
+          lineCost: Math.round(extra.quantity * unitCost * 10000) / 10000,
+        };
+      }),
+    );
+
+    const totalOutputQuantity = order.outputs.reduce(
+      (sum, output) => sum + output.quantity,
+      0,
+    );
     const calc = ProductionCostCalculatorService.calculate({
       items: priced,
       laborCost: order.laborCost,
       overheadCost: order.overheadCost,
-      outputQuantity: order.actualOutputQuantity,
+      outputQuantity: totalOutputQuantity,
     });
     const lineByRef = new Map(calc.items.map((line) => [line.ref, line]));
     const unitCostByRef = new Map(
       priced.map((line) => [line.ref, line.unitCost]),
+    );
+
+    // Blended base cost (shared inputs + labor + overhead spread over every
+    // unit produced) plus this line's own extras, divided back out to a
+    // per-unit cost for that line's stock entry.
+    const finalOutputs = order.outputs.map((output, index) => {
+      const extras = pricedExtrasByOutputIndex[index];
+      const extrasCost = extras.reduce((sum, extra) => sum + extra.lineCost, 0);
+      const lineTotalCost =
+        Math.round(
+          (output.quantity * calc.outputUnitCost + extrasCost) * 10000,
+        ) / 10000;
+      const unitCost =
+        Math.round((lineTotalCost / output.quantity) * 1e6) / 1e6;
+      return {
+        idProductionOrderOutput: output.idProductionOrderOutput,
+        idProduct: output.idProduct,
+        productName: output.productName,
+        quantity: output.quantity,
+        unitCost,
+        extras,
+      };
+    });
+    const totalExtrasCost = finalOutputs.reduce(
+      (sum, output) =>
+        sum + output.extras.reduce((s, extra) => s + extra.lineCost, 0),
+      0,
     );
 
     // Freeze costs and status before the stock movements so the order can
@@ -98,9 +175,9 @@ export class CompleteProductionOrderUseCase {
     const completed = await this.orderRepository.completeOrder({
       idProductionOrder,
       inputsCost: calc.inputsCost,
-      totalCost: calc.totalCost,
+      totalCost: Math.round((calc.totalCost + totalExtrasCost) * 10000) / 10000,
       outputUnitCost: calc.outputUnitCost,
-      actualOutputQuantity: order.actualOutputQuantity,
+      actualOutputQuantity: totalOutputQuantity,
       concludedAt: new Date(),
       items: order.items.map((item) => ({
         idProductionOrderItem: item.idProductionOrderItem,
@@ -108,11 +185,13 @@ export class CompleteProductionOrderUseCase {
           unitCostByRef.get(item.idProductionOrderItem) ?? 0,
         lineCost: lineByRef.get(item.idProductionOrderItem)?.lineCost ?? 0,
       })),
+      outputs: finalOutputs,
     });
 
-    // Debit every input, then credit the finished product — all in one
-    // batched transaction (dozens of round-trips collapse to a handful, which
-    // is what kept this call under the request timeout against a cloud DB).
+    // Debit every shared input and every line's extras, then credit every
+    // finished-good line — all in one batched transaction (dozens of
+    // round-trips collapse to a handful, which is what kept this call under
+    // the request timeout against a cloud DB).
     try {
       await this.inventoryLedgerService.registerMovements([
         ...order.items.map((item) => ({
@@ -126,18 +205,31 @@ export class CompleteProductionOrderUseCase {
           createdByUserId: userId,
           occurredAt: order.productionDate,
         })),
-        {
+        ...finalOutputs.flatMap((output) =>
+          output.extras.map((extra) => ({
+            idStore,
+            idProduct: extra.idProduct,
+            type: StockMovementType.SAIDA_PRODUCAO,
+            quantity: extra.quantity,
+            sourceType: PRODUCTION_SOURCE,
+            sourceId: idProductionOrder,
+            note: `Produção ${idProductionOrder} (extra de ${output.productName})`,
+            createdByUserId: userId,
+            occurredAt: order.productionDate,
+          })),
+        ),
+        ...finalOutputs.map((output) => ({
           idStore,
-          idProduct: order.idOutputProduct,
+          idProduct: output.idProduct,
           type: StockMovementType.ENTRADA_PRODUCAO,
-          quantity: order.actualOutputQuantity,
-          unitCost: calc.outputUnitCost,
+          quantity: output.quantity,
+          unitCost: output.unitCost,
           sourceType: PRODUCTION_SOURCE,
           sourceId: idProductionOrder,
           note: `Produção ${idProductionOrder}`,
           createdByUserId: userId,
           occurredAt: order.productionDate,
-        },
+        })),
       ]);
     } catch (error) {
       // The order stays CONCLUIDA with its costs frozen; the stock entries

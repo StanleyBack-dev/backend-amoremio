@@ -5,6 +5,14 @@ import { currentDateOnly } from "@/common/utils/date.util";
 import { StoreAuthorizationService } from "@/modules/stores/application/use-cases/store-authorization.use-case";
 import { StorePermission } from "@/modules/stores/domain/enums/store-permission.enum";
 import {
+  PRODUCT_REPOSITORY,
+  type ProductRepositoryPort,
+} from "@/modules/catalog/application/ports/product-repository.port";
+import {
+  PRODUCIBLE_INPUT_KINDS,
+  PRODUCIBLE_OUTPUT_KINDS,
+} from "@/modules/catalog/domain/enums/product-kind.enum";
+import {
   RECIPE_REPOSITORY,
   type RecipeRepositoryPort,
   type RecipeView,
@@ -65,6 +73,8 @@ export class ProductionOrderCrudUseCases {
     private readonly orderRepository: ProductionOrderRepositoryPort,
     @Inject(RECIPE_REPOSITORY)
     private readonly recipeRepository: RecipeRepositoryPort,
+    @Inject(PRODUCT_REPOSITORY)
+    private readonly productRepository: ProductRepositoryPort,
     private readonly storeAuthorizationService: StoreAuthorizationService,
   ) {}
 
@@ -124,6 +134,113 @@ export class ProductionOrderCrudUseCases {
       notes: (command.notes ?? "").trim() || null,
       createdByUserId: userId,
       items: exploded.items,
+    });
+  }
+
+  // Recreates recipe, batches, mão de obra/outros custos, and every output
+  // (+ its extras) as a brand-new draft — one call instead of the client
+  // driving create + N addOutput + M addOutputExtra one at a time. Items are
+  // re-exploded from the recipe as it stands today (same as a fresh
+  // create()), not copied from the source order's possibly-stale snapshot.
+  async duplicate(
+    userId: string,
+    idStore: string,
+    idProductionOrder: string,
+  ): Promise<ProductionOrderView> {
+    await this.assertRegister(userId, idStore);
+    const source = await loadProductionOrderOrFail(
+      this.orderRepository,
+      idStore,
+      idProductionOrder,
+    );
+
+    const recipe = await loadRecipeOrFail(
+      this.recipeRepository,
+      idStore,
+      source.idRecipe,
+    );
+    if (!recipe.status) {
+      throw AppException.from(APP_ERRORS.production.recipeInactive, undefined);
+    }
+    if (recipe.items.length === 0) {
+      throw AppException.from(APP_ERRORS.production.emptyOrder, undefined);
+    }
+    const exploded = explodeRecipe(recipe, source.batches);
+
+    // Re-validate every product the source order's outputs/extras reference
+    // still exists and is still the right kind — a duplicate must never
+    // silently carry forward a reference to something deleted since.
+    const referencedIds = [
+      ...new Set([
+        ...source.outputs.map((output) => output.idProduct),
+        ...source.outputs.flatMap((output) =>
+          output.extras.map((extra) => extra.idProduct),
+        ),
+      ]),
+    ];
+    const productById = new Map(
+      referencedIds.length > 0
+        ? (
+            await this.productRepository.findManyByIds(idStore, referencedIds)
+          ).map((product) => [product.idProduct, product] as const)
+        : [],
+    );
+
+    const outputs = source.outputs.map((output) => {
+      const product = productById.get(output.idProduct);
+      if (!product) {
+        throw AppException.from(APP_ERRORS.catalog.productNotFound, undefined);
+      }
+      if (!PRODUCIBLE_OUTPUT_KINDS.includes(product.kind)) {
+        throw AppException.from(
+          APP_ERRORS.production.outputNotFinishedGood,
+          undefined,
+        );
+      }
+      const extras = output.extras.map((extra) => {
+        const extraProduct = productById.get(extra.idProduct);
+        if (!extraProduct) {
+          throw AppException.from(
+            APP_ERRORS.catalog.productNotFound,
+            undefined,
+          );
+        }
+        if (!PRODUCIBLE_INPUT_KINDS.includes(extraProduct.kind)) {
+          throw AppException.from(
+            APP_ERRORS.production.inputNotInsumo,
+            undefined,
+          );
+        }
+        return {
+          idProduct: extra.idProduct,
+          productName: extraProduct.name,
+          quantity: extra.quantity,
+        };
+      });
+      return {
+        idProduct: output.idProduct,
+        productName: product.name,
+        quantity: output.quantity,
+        extras,
+      };
+    });
+
+    return this.orderRepository.duplicateOrder({
+      idStore,
+      idRecipe: recipe.idRecipe,
+      recipeName: recipe.name,
+      idOutputProduct: recipe.idOutputProduct,
+      outputProductName: recipe.outputProductName,
+      productionDate: currentDateOnly(),
+      batches: source.batches,
+      plannedOutputQuantity: exploded.plannedOutputQuantity,
+      actualOutputQuantity: exploded.plannedOutputQuantity,
+      laborCost: source.laborCost,
+      overheadCost: source.overheadCost,
+      notes: source.notes,
+      createdByUserId: userId,
+      items: exploded.items,
+      outputs,
     });
   }
 
@@ -294,6 +411,142 @@ export class ProductionOrderCrudUseCases {
       actualOutputQuantity,
       items: exploded.items,
     });
+  }
+
+  // Outputs/extras persist as soon as they're added — same "add to list"
+  // pattern Compras/Vendas use for items — instead of living only in the
+  // browser until the order is completed, which was losing them on refresh.
+  async addOutput(
+    userId: string,
+    idStore: string,
+    idProductionOrder: string,
+    idProduct: string,
+    quantity: number,
+  ): Promise<ProductionOrderView> {
+    await this.assertRegister(userId, idStore);
+    const order = await loadProductionOrderOrFail(
+      this.orderRepository,
+      idStore,
+      idProductionOrder,
+    );
+    assertDraft(order);
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      throw AppException.from(APP_ERRORS.production.invalidQuantity, undefined);
+    }
+    if (order.outputs.some((output) => output.idProduct === idProduct)) {
+      throw AppException.from(
+        APP_ERRORS.production.duplicatedProductionOutput,
+        undefined,
+      );
+    }
+    const product = await this.productRepository.findById(idStore, idProduct);
+    if (!product) {
+      throw AppException.from(APP_ERRORS.catalog.productNotFound, undefined);
+    }
+    if (!PRODUCIBLE_OUTPUT_KINDS.includes(product.kind)) {
+      throw AppException.from(
+        APP_ERRORS.production.outputNotFinishedGood,
+        undefined,
+      );
+    }
+    return this.orderRepository.addOutput({
+      idProductionOrder,
+      idProduct,
+      productName: product.name,
+      quantity,
+    });
+  }
+
+  async removeOutput(
+    userId: string,
+    idStore: string,
+    idProductionOrder: string,
+    idProductionOrderOutput: string,
+  ): Promise<ProductionOrderView> {
+    await this.assertRegister(userId, idStore);
+    const order = await loadProductionOrderOrFail(
+      this.orderRepository,
+      idStore,
+      idProductionOrder,
+    );
+    assertDraft(order);
+    const exists = order.outputs.some(
+      (output) => output.idProductionOrderOutput === idProductionOrderOutput,
+    );
+    if (!exists) {
+      throw AppException.from(APP_ERRORS.production.outputNotFound, undefined);
+    }
+    return this.orderRepository.removeOutput(
+      idProductionOrder,
+      idProductionOrderOutput,
+    );
+  }
+
+  async addOutputExtra(
+    userId: string,
+    idStore: string,
+    idProductionOrder: string,
+    idProductionOrderOutput: string,
+    idProduct: string,
+    quantity: number,
+  ): Promise<ProductionOrderView> {
+    await this.assertRegister(userId, idStore);
+    const order = await loadProductionOrderOrFail(
+      this.orderRepository,
+      idStore,
+      idProductionOrder,
+    );
+    assertDraft(order);
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      throw AppException.from(APP_ERRORS.production.invalidQuantity, undefined);
+    }
+    const output = order.outputs.find(
+      (candidate) =>
+        candidate.idProductionOrderOutput === idProductionOrderOutput,
+    );
+    if (!output) {
+      throw AppException.from(APP_ERRORS.production.outputNotFound, undefined);
+    }
+    if (output.extras.some((extra) => extra.idProduct === idProduct)) {
+      throw AppException.from(
+        APP_ERRORS.production.duplicatedOutputExtra,
+        undefined,
+      );
+    }
+    const product = await this.productRepository.findById(idStore, idProduct);
+    if (!product) {
+      throw AppException.from(APP_ERRORS.catalog.productNotFound, undefined);
+    }
+    if (!PRODUCIBLE_INPUT_KINDS.includes(product.kind)) {
+      throw AppException.from(APP_ERRORS.production.inputNotInsumo, undefined);
+    }
+    return this.orderRepository.addOutputExtra(idProductionOrder, {
+      idProductionOrderOutput,
+      idProduct,
+      productName: product.name,
+      quantity,
+    });
+  }
+
+  async removeOutputExtra(
+    userId: string,
+    idStore: string,
+    idProductionOrder: string,
+    idProductionOrderOutput: string,
+    idProductionOrderOutputExtra: string,
+  ): Promise<ProductionOrderView> {
+    await this.assertRegister(userId, idStore);
+    const order = await loadProductionOrderOrFail(
+      this.orderRepository,
+      idStore,
+      idProductionOrder,
+    );
+    assertDraft(order);
+    return this.orderRepository.removeOutputExtra(
+      idProductionOrder,
+      idProductionOrderOutput,
+      idProductionOrderOutputExtra,
+    );
   }
 
   async cancel(

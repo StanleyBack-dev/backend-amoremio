@@ -6,7 +6,10 @@ import {
   PRODUCT_REPOSITORY,
   type ProductRepositoryPort,
 } from "@/modules/catalog/application/ports/product-repository.port";
-import { SELLABLE_KINDS } from "@/modules/catalog/domain/enums/product-kind.enum";
+import {
+  SELLABLE_KINDS,
+  type ProductKind,
+} from "@/modules/catalog/domain/enums/product-kind.enum";
 import { SalesChannel } from "@/modules/sales/domain/enums/sales-channel.enum";
 import { SalesOrderStatus } from "@/modules/sales/domain/enums/sales-order-status.enum";
 import { StoreAuthorizationService } from "@/modules/stores/application/use-cases/store-authorization.use-case";
@@ -19,6 +22,7 @@ import {
 } from "@/modules/sales/application/ports/sales-order-repository.port";
 import {
   AddSalesOrderItemCommand,
+  AddSalesOrderItemsCommand,
   CreateSalesOrderCommand,
   ListSalesOrdersQuery,
   UpdateSalesOrderHeaderCommand,
@@ -219,6 +223,92 @@ export class SalesOrderCrudUseCases {
       quantity: command.quantity,
       unitPrice,
       lineTotal: calc.lines[0].lineTotal,
+    });
+  }
+
+  // Bulk counterpart to addItem — the frontend stages several products
+  // client-side (add-to-list, same pattern as Compras/Receitas) and sends
+  // them all in one call instead of one round-trip per item.
+  async addItems(
+    userId: string,
+    command: AddSalesOrderItemsCommand,
+  ): Promise<SalesOrderView> {
+    if (!command.items || command.items.length === 0) {
+      throw AppException.from(APP_ERRORS.sales.noItemsToAdd, undefined);
+    }
+
+    const [, order] = await Promise.all([
+      this.assert(userId, command.idStore),
+      loadSalesOrderOrFail(
+        this.salesOrderRepository,
+        command.idStore,
+        command.idSalesOrder,
+      ),
+    ]);
+    assertOpen(order);
+
+    // Load every referenced product in one query instead of one per entry —
+    // the same batching AddRecipeItemsCommand uses.
+    const requestedIds = [
+      ...new Set(command.items.map((entry) => entry.idProduct)),
+    ];
+    const products = await this.productRepository.findManyByIds(
+      command.idStore,
+      requestedIds,
+    );
+    const productById = new Map(products.map((p) => [p.idProduct, p]));
+
+    const seen = new Set(order.items.map((item) => item.idProduct));
+    const entries: {
+      idProduct: string;
+      productName: string;
+      productKind: ProductKind;
+      quantity: number;
+      unitPrice: number;
+    }[] = [];
+    for (const entry of command.items) {
+      const product = productById.get(entry.idProduct);
+      if (!product) {
+        throw AppException.from(APP_ERRORS.catalog.productNotFound, undefined);
+      }
+      if (!SELLABLE_KINDS.includes(product.kind)) {
+        throw AppException.from(APP_ERRORS.sales.productNotSellable, undefined);
+      }
+      if (seen.has(product.idProduct)) {
+        throw AppException.from(APP_ERRORS.sales.duplicatedItem, {
+          product: product.name,
+        });
+      }
+      seen.add(product.idProduct);
+      entries.push({
+        idProduct: product.idProduct,
+        productName: product.name,
+        productKind: product.kind,
+        quantity: entry.quantity,
+        unitPrice: entry.unitPrice ?? product.salePrice ?? 0,
+      });
+    }
+
+    // calculate() validates quantity/price itself (throws the same errors
+    // addItem relies on) and returns each line's total keyed by ref.
+    const calc = SalesOrderCalculatorService.calculate(
+      entries.map((entry) => ({
+        ref: entry.idProduct,
+        quantity: entry.quantity,
+        unitPrice: entry.unitPrice,
+      })),
+      0,
+    );
+    const lineTotalByRef = new Map(
+      calc.lines.map((line) => [line.ref, line.lineTotal]),
+    );
+
+    return this.salesOrderRepository.addItems({
+      idSalesOrder: command.idSalesOrder,
+      items: entries.map((entry) => ({
+        ...entry,
+        lineTotal: lineTotalByRef.get(entry.idProduct) ?? 0,
+      })),
     });
   }
 

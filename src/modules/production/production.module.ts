@@ -12,6 +12,8 @@ import { RecipeEntity } from "@/modules/production/infrastructure/persistence/ty
 import { RecipeItemEntity } from "@/modules/production/infrastructure/persistence/typeorm/entities/recipe-item.entity";
 import { ProductionOrderEntity } from "@/modules/production/infrastructure/persistence/typeorm/entities/production-order.entity";
 import { ProductionOrderItemEntity } from "@/modules/production/infrastructure/persistence/typeorm/entities/production-order-item.entity";
+import { ProductionOrderOutputEntity } from "@/modules/production/infrastructure/persistence/typeorm/entities/production-order-output.entity";
+import { ProductionOrderOutputExtraEntity } from "@/modules/production/infrastructure/persistence/typeorm/entities/production-order-output-extra.entity";
 import { ProductionTypeormRepository } from "@/modules/production/infrastructure/persistence/typeorm/repositories/production-typeorm.repository";
 import { ProductionResolver } from "@/modules/production/presentation/graphql/resolvers/production.resolver";
 import "@/modules/production/presentation/graphql/enums/production-graphql.enums";
@@ -23,6 +25,8 @@ import "@/modules/production/presentation/graphql/enums/production-graphql.enums
       RecipeItemEntity,
       ProductionOrderEntity,
       ProductionOrderItemEntity,
+      ProductionOrderOutputEntity,
+      ProductionOrderOutputExtraEntity,
     ]),
     CatalogModule,
     InventoryModule,

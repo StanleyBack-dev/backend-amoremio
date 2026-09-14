@@ -79,6 +79,21 @@ export type AddSalesOrderItemPayload = {
   lineTotal: number;
 };
 
+// Bulk counterpart to AddSalesOrderItemPayload — lets the client stage
+// several items and send them in one call instead of one round-trip per
+// item (see SalesOrderCrudUseCases.addItems).
+export type AddSalesOrderItemsPayload = {
+  idSalesOrder: string;
+  items: {
+    idProduct: string;
+    productName: string;
+    productKind: ProductKind;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+  }[];
+};
+
 export type UpdateSalesOrderItemPayload = {
   idSalesOrder: string;
   idSalesOrderItem: string;
@@ -119,6 +134,7 @@ export interface SalesOrderRepositoryPort {
   ): Promise<{ records: SalesOrderView[]; total: number }>;
   updateHeader(payload: UpdateSalesOrderHeaderPayload): Promise<SalesOrderView>;
   addItem(payload: AddSalesOrderItemPayload): Promise<SalesOrderView>;
+  addItems(payload: AddSalesOrderItemsPayload): Promise<SalesOrderView>;
   updateItem(payload: UpdateSalesOrderItemPayload): Promise<SalesOrderView>;
   removeItem(
     idSalesOrder: string,

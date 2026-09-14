@@ -31,10 +31,14 @@ import {
   UpdateRecipeItemInputDto,
 } from "@/modules/production/presentation/graphql/dtos/recipe-input.dtos";
 import {
+  AddProductionOrderOutputExtraInputDto,
+  AddProductionOrderOutputInputDto,
   CreateProductionOrderInputDto,
   GetProductionOrderFilterOptionsInputDto,
   ListProductionOrdersInputDto,
   ProductionOrderScopeInputDto,
+  RemoveProductionOrderOutputExtraInputDto,
+  RemoveProductionOrderOutputInputDto,
   UpdateProductionOrderInputDto,
 } from "@/modules/production/presentation/graphql/dtos/production-order-input.dtos";
 import "@/modules/production/presentation/graphql/enums/production-graphql.enums";
@@ -226,6 +230,24 @@ export class ProductionResolver {
   }
 
   @Mutation(() => ProductionOrderMutationResponseDto, {
+    name: "duplicateProductionOrder",
+  })
+  async duplicateProductionOrder(
+    @CurrentUser() user: AuthenticatedUser,
+    @Args("input") input: ProductionOrderScopeInputDto,
+  ) {
+    const duplicated = await this.orderCrud.duplicate(
+      user.idUsers,
+      input.idStore,
+      input.idProductionOrder,
+    );
+    return buildDataResponse(
+      ProductionOrderResponseDto.fromView(duplicated),
+      RESPONSE_MESSAGES.production.orderCreated,
+    );
+  }
+
+  @Mutation(() => ProductionOrderMutationResponseDto, {
     name: "updateProductionOrder",
   })
   async updateProductionOrder(
@@ -254,6 +276,86 @@ export class ProductionResolver {
     return buildDataResponse(
       ProductionOrderResponseDto.fromView(completed),
       RESPONSE_MESSAGES.production.orderConcluded,
+    );
+  }
+
+  @Mutation(() => ProductionOrderMutationResponseDto, {
+    name: "addProductionOrderOutput",
+  })
+  async addProductionOrderOutput(
+    @CurrentUser() user: AuthenticatedUser,
+    @Args("input") input: AddProductionOrderOutputInputDto,
+  ) {
+    const updated = await this.orderCrud.addOutput(
+      user.idUsers,
+      input.idStore,
+      input.idProductionOrder,
+      input.idProduct,
+      input.quantity,
+    );
+    return buildDataResponse(
+      ProductionOrderResponseDto.fromView(updated),
+      RESPONSE_MESSAGES.production.orderUpdated,
+    );
+  }
+
+  @Mutation(() => ProductionOrderMutationResponseDto, {
+    name: "removeProductionOrderOutput",
+  })
+  async removeProductionOrderOutput(
+    @CurrentUser() user: AuthenticatedUser,
+    @Args("input") input: RemoveProductionOrderOutputInputDto,
+  ) {
+    const updated = await this.orderCrud.removeOutput(
+      user.idUsers,
+      input.idStore,
+      input.idProductionOrder,
+      input.idProductionOrderOutput,
+    );
+    return buildDataResponse(
+      ProductionOrderResponseDto.fromView(updated),
+      RESPONSE_MESSAGES.production.orderUpdated,
+    );
+  }
+
+  @Mutation(() => ProductionOrderMutationResponseDto, {
+    name: "addProductionOrderOutputExtra",
+  })
+  async addProductionOrderOutputExtra(
+    @CurrentUser() user: AuthenticatedUser,
+    @Args("input") input: AddProductionOrderOutputExtraInputDto,
+  ) {
+    const updated = await this.orderCrud.addOutputExtra(
+      user.idUsers,
+      input.idStore,
+      input.idProductionOrder,
+      input.idProductionOrderOutput,
+      input.idProduct,
+      input.quantity,
+    );
+    return buildDataResponse(
+      ProductionOrderResponseDto.fromView(updated),
+      RESPONSE_MESSAGES.production.orderUpdated,
+    );
+  }
+
+  @Mutation(() => ProductionOrderMutationResponseDto, {
+    name: "removeProductionOrderOutputExtra",
+  })
+  async removeProductionOrderOutputExtra(
+    @CurrentUser() user: AuthenticatedUser,
+    @Args("input") input: RemoveProductionOrderOutputExtraInputDto,
+  ) {
+    const updated = await this.orderCrud.removeOutputExtra(
+      user.idUsers,
+      input.idStore,
+      input.idProductionOrder,
+      input.idProductionOrderOutput,
+      input.idProductionOrderOutputExtra,
+    );
+    return buildDataResponse(
+      ProductionOrderResponseDto.fromView(updated),
+      RESPONSE_MESSAGES.production.orderUpdated,
     );
   }
 

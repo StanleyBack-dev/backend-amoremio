@@ -31,6 +31,12 @@ export class AddSalesOrderItemCommand {
   unitPrice?: number;
 }
 
+export class AddSalesOrderItemsCommand {
+  idStore!: string;
+  idSalesOrder!: string;
+  items!: { idProduct: string; quantity: number; unitPrice?: number }[];
+}
+
 export class UpdateSalesOrderItemCommand {
   idStore!: string;
   idSalesOrder!: string;

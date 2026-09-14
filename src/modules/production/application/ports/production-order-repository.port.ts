@@ -10,6 +10,24 @@ export type ProductionOrderItemView = {
   lineCost: number;
 };
 
+export type ProductionOrderOutputExtraView = {
+  idProductionOrderOutputExtra: string;
+  idProduct: string;
+  productName: string;
+  quantity: number;
+  unitCostAtConsumption: number;
+  lineCost: number;
+};
+
+export type ProductionOrderOutputView = {
+  idProductionOrderOutput: string;
+  idProduct: string;
+  productName: string;
+  quantity: number;
+  unitCost: number;
+  extras: ProductionOrderOutputExtraView[];
+};
+
 export type ProductionOrderView = {
   idProductionOrder: string;
   idStore: string;
@@ -34,6 +52,7 @@ export type ProductionOrderView = {
   createdAt: Date;
   updatedAt: Date;
   items: ProductionOrderItemView[];
+  outputs: ProductionOrderOutputView[];
 };
 
 export type CreateProductionOrderPayload = {
@@ -88,6 +107,49 @@ export type CompleteProductionOrderPayload = {
     unitCostAtConsumption: number;
     lineCost: number;
   }[];
+  // Updates the already-persisted draft rows in place (see
+  // ProductionOrderCrudUseCases.addOutput/addOutputExtra) — completion only
+  // ever freezes their cost, it never creates new output/extra rows.
+  outputs: {
+    idProductionOrderOutput: string;
+    unitCost: number;
+    extras: {
+      idProductionOrderOutputExtra: string;
+      unitCostAtConsumption: number;
+      lineCost: number;
+    }[];
+  }[];
+};
+
+// Recreates a whole order (items + outputs + extras) as a new draft in a
+// single call — see ProductionOrderCrudUseCases.duplicate. Doing this
+// server-side collapses what would otherwise be 1 (create) + N (outputs) +
+// M (extras) sequential round-trips from the client into one.
+export type DuplicateProductionOrderPayload = CreateProductionOrderPayload & {
+  outputs: {
+    idProduct: string;
+    productName: string;
+    quantity: number;
+    extras: {
+      idProduct: string;
+      productName: string;
+      quantity: number;
+    }[];
+  }[];
+};
+
+export type AddProductionOrderOutputPayload = {
+  idProductionOrder: string;
+  idProduct: string;
+  productName: string;
+  quantity: number;
+};
+
+export type AddProductionOrderOutputExtraPayload = {
+  idProductionOrderOutput: string;
+  idProduct: string;
+  productName: string;
+  quantity: number;
 };
 
 export type ListProductionOrdersFilters = {
@@ -112,6 +174,9 @@ export interface ProductionOrderRepositoryPort {
   createOrder(
     payload: CreateProductionOrderPayload,
   ): Promise<ProductionOrderView>;
+  duplicateOrder(
+    payload: DuplicateProductionOrderPayload,
+  ): Promise<ProductionOrderView>;
   findOrderById(
     idStore: string,
     idProductionOrder: string,
@@ -132,6 +197,23 @@ export interface ProductionOrderRepositoryPort {
   ): Promise<ProductionOrderView>;
   completeOrder(
     payload: CompleteProductionOrderPayload,
+  ): Promise<ProductionOrderView>;
+
+  addOutput(
+    payload: AddProductionOrderOutputPayload,
+  ): Promise<ProductionOrderView>;
+  removeOutput(
+    idProductionOrder: string,
+    idProductionOrderOutput: string,
+  ): Promise<ProductionOrderView>;
+  addOutputExtra(
+    idProductionOrder: string,
+    payload: AddProductionOrderOutputExtraPayload,
+  ): Promise<ProductionOrderView>;
+  removeOutputExtra(
+    idProductionOrder: string,
+    idProductionOrderOutput: string,
+    idProductionOrderOutputExtra: string,
   ): Promise<ProductionOrderView>;
 }
 

@@ -34,6 +34,19 @@ function orderView(overrides?: Partial<Record<string, unknown>>) {
         unit: "KG",
       },
     ],
+    // Outputs/extras are already persisted (added one at a time before
+    // completion — see ProductionOrderCrudUseCases) by the time this use
+    // case runs, so the view already carries them with 0 cost.
+    outputs: [
+      {
+        idProductionOrderOutput: "poo-1",
+        idProduct: "out-1",
+        productName: "Brownie",
+        quantity: 40,
+        unitCost: 0,
+        extras: [],
+      },
+    ],
     ...overrides,
   };
 }
@@ -162,5 +175,109 @@ describe("CompleteProductionOrderUseCase", () => {
     await expect(
       useCase.execute("user-1", "store-1", "po-1"),
     ).rejects.toBeInstanceOf(AppException);
+  });
+
+  it("rejects completion when no outputs were added", async () => {
+    const { useCase } = build({ order: orderView({ outputs: [] }) });
+    await expect(
+      useCase.execute("user-1", "store-1", "po-1"),
+    ).rejects.toBeInstanceOf(AppException);
+  });
+
+  it("splits one batch into multiple output lines, blending the base cost and pricing each line's own extras separately", async () => {
+    const { useCase, orderRepository, ledger } = build({
+      stock: {
+        "in-1": { quantityOnHand: 10, averageCost: 4 },
+        "in-2": { quantityOnHand: 10, averageCost: 20 },
+        nutella: { quantityOnHand: 5, averageCost: 10 },
+      },
+      order: orderView({
+        outputs: [
+          {
+            idProductionOrderOutput: "poo-1",
+            idProduct: "out-1",
+            productName: "Brownie",
+            quantity: 20,
+            unitCost: 0,
+            extras: [],
+          },
+          {
+            idProductionOrderOutput: "poo-2",
+            idProduct: "out-2",
+            productName: "Brownie com Nutella",
+            quantity: 20,
+            unitCost: 0,
+            extras: [
+              {
+                idProductionOrderOutputExtra: "pooe-1",
+                idProduct: "nutella",
+                productName: "Nutella",
+                quantity: 1,
+                unitCostAtConsumption: 0,
+                lineCost: 0,
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    // inputs cost: 1*4 + 2*20 = 44, spread over 40 total units => 1.1/un.
+    // out-2 also gets 1 unit of nutella (10) added on top, for its own
+    // 20 units => extra 0.5/un on top of the 1.1 blended base.
+    await useCase.execute("user-1", "store-1", "po-1");
+
+    expect(orderRepository.completeOrder).toHaveBeenCalledWith(
+      expect.objectContaining({
+        inputsCost: 44,
+        totalCost: 54, // 44 (shared) + 10 (nutella extra)
+        outputUnitCost: 1.1, // blended base, before extras
+        actualOutputQuantity: 40,
+        outputs: [
+          expect.objectContaining({
+            idProduct: "out-1",
+            quantity: 20,
+            unitCost: 1.1,
+            extras: [],
+          }),
+          expect.objectContaining({
+            idProduct: "out-2",
+            quantity: 20,
+            unitCost: 1.6, // (20*1.1 + 10) / 20
+            extras: [
+              expect.objectContaining({
+                idProduct: "nutella",
+                quantity: 1,
+                lineCost: 10,
+              }),
+            ],
+          }),
+        ],
+      }),
+    );
+
+    const movements = ledger.registerMovements.mock.calls[0][0];
+    expect(movements).toHaveLength(5); // 2 shared inputs + 1 extra + 2 outputs
+    expect(movements).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          idProduct: "nutella",
+          type: StockMovementType.SAIDA_PRODUCAO,
+          quantity: 1,
+        }),
+        expect.objectContaining({
+          idProduct: "out-1",
+          type: StockMovementType.ENTRADA_PRODUCAO,
+          quantity: 20,
+          unitCost: 1.1,
+        }),
+        expect.objectContaining({
+          idProduct: "out-2",
+          type: StockMovementType.ENTRADA_PRODUCAO,
+          quantity: 20,
+          unitCost: 1.6,
+        }),
+      ]),
+    );
   });
 });
