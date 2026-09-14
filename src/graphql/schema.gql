@@ -602,6 +602,7 @@ enum SalesChannel {
   AIQFOME
   WHATSAPP
   TELEFONE
+  FACULDADE
   OUTRO
 }
 
@@ -1128,6 +1129,7 @@ type Mutation {
   addRecipeItems(input: AddRecipeItemsInputDto!): RecipeMutationResponseDto!
   updateRecipeItem(input: UpdateRecipeItemInputDto!): RecipeMutationResponseDto!
   removeRecipeItem(input: RemoveRecipeItemInputDto!): RecipeMutationResponseDto!
+  deleteRecipe(input: RecipeScopeInputDto!): SuccessResponseDto!
   createProductionOrder(input: CreateProductionOrderInputDto!): ProductionOrderMutationResponseDto!
   updateProductionOrder(input: UpdateProductionOrderInputDto!): ProductionOrderMutationResponseDto!
   completeProductionOrder(input: ProductionOrderScopeInputDto!): ProductionOrderMutationResponseDto!

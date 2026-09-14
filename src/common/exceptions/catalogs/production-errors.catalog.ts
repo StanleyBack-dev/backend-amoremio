@@ -93,6 +93,12 @@ export const productionErrors = {
     status: HttpStatus.CONFLICT,
     message: "Esta receita está inativa e não pode ser produzida.",
   },
+  recipeHasOpenOrders: {
+    code: "PRODUCTION_RECIPE_HAS_OPEN_ORDERS",
+    status: HttpStatus.CONFLICT,
+    message:
+      "Esta receita tem ordens de produção em rascunho — conclua ou exclua essas ordens antes de excluir a receita.",
+  },
   insufficientInput: {
     code: "PRODUCTION_INSUFFICIENT_INPUT",
     status: HttpStatus.CONFLICT,

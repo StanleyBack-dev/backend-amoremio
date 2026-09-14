@@ -83,6 +83,9 @@ function build(overrides?: {
       return found.filter((product) => product != null);
     },
   );
+  const productionOrderRepository = {
+    listOrdersByStore: jest.fn().mockResolvedValue({ records: [], total: 0 }),
+  };
   const auth = {
     assertStorePermission: jest.fn().mockResolvedValue(undefined),
   };
@@ -90,10 +93,12 @@ function build(overrides?: {
     useCase: new RecipeCrudUseCases(
       recipeRepository as never,
       productRepository as never,
+      productionOrderRepository as never,
       auth as never,
     ),
     recipeRepository,
     productRepository,
+    productionOrderRepository,
     auth,
   };
 }

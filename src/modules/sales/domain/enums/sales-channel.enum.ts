@@ -9,5 +9,6 @@ export enum SalesChannel {
   AIQFOME = "AIQFOME",
   WHATSAPP = "WHATSAPP",
   TELEFONE = "TELEFONE",
+  FACULDADE = "FACULDADE",
   OUTRO = "OUTRO",
 }

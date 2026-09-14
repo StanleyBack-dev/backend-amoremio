@@ -171,6 +171,10 @@ export const RESPONSE_MESSAGES = {
       code: "RECIPE_UPDATED",
       message: "Ficha técnica atualizada com sucesso.",
     },
+    recipeDeleted: {
+      code: "RECIPE_DELETED",
+      message: "Ficha técnica excluída com sucesso.",
+    },
     recipesListed: {
       code: "RECIPES_LISTED",
       message: "Fichas técnicas carregadas com sucesso.",
