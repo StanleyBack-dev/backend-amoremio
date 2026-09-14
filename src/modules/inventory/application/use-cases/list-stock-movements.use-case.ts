@@ -41,7 +41,13 @@ export class ListStockMovementsUseCase {
 
     const { records, total } = await this.inventoryRepository.listMovements(
       idStore,
-      { idProduct: filters?.idProduct, type: filters?.type, page, limit },
+      {
+        idProduct: filters?.idProduct,
+        type: filters?.type,
+        sourceId: filters?.sourceId,
+        page,
+        limit,
+      },
     );
 
     const totalPages = Math.max(Math.ceil(total / limit), 1);

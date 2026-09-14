@@ -32,6 +32,7 @@ export type ListStoreStockFilters = {
 export type ListStockMovementsFilters = {
   idProduct?: string;
   type?: StockMovementType;
+  sourceId?: string;
   page?: number;
   limit?: number;
 };

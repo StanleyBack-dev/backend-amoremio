@@ -981,6 +981,7 @@ input ListStockMovementsInputDto {
   idStore: String!
   idProduct: String
   type: StockMovementType
+  sourceId: String
   page: Int
   limit: Int
 }

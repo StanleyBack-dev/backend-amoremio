@@ -84,6 +84,14 @@ export class ListStockMovementsInputDto {
   @IsEnum(StockMovementType)
   type?: StockMovementType;
 
+  // Filters to every movement originated by one document (a sale, a
+  // purchase, a production order) — used to build cost breakdowns for that
+  // document without paging through the whole store ledger.
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsUUID()
+  sourceId?: string;
+
   @Field(() => Int, { nullable: true })
   @IsOptional()
   @IsInt()
