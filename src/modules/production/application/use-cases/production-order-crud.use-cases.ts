@@ -549,6 +549,45 @@ export class ProductionOrderCrudUseCases {
     );
   }
 
+  // Drops one shared consumption line from a draft — for when the operator
+  // realizes an insumo shouldn't be part of this specific batch, without
+  // having to re-sync the whole order from the recipe (which would also
+  // reset every other line back to the recipe's own quantities). At least
+  // one item must remain: an order with zero inputs can't be completed.
+  async removeItem(
+    userId: string,
+    idStore: string,
+    idProductionOrder: string,
+    idProductionOrderItem: string,
+  ): Promise<ProductionOrderView> {
+    await this.assertRegister(userId, idStore);
+    const order = await loadProductionOrderOrFail(
+      this.orderRepository,
+      idStore,
+      idProductionOrder,
+    );
+    assertDraft(order);
+    const exists = order.items.some(
+      (item) => item.idProductionOrderItem === idProductionOrderItem,
+    );
+    if (!exists) {
+      throw AppException.from(
+        APP_ERRORS.production.orderItemNotFound,
+        undefined,
+      );
+    }
+    if (order.items.length <= 1) {
+      throw AppException.from(
+        APP_ERRORS.production.cannotRemoveLastItem,
+        undefined,
+      );
+    }
+    return this.orderRepository.removeOrderItem(
+      idProductionOrder,
+      idProductionOrderItem,
+    );
+  }
+
   async cancel(
     userId: string,
     idStore: string,

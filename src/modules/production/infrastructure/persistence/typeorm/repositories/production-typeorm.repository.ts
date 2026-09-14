@@ -462,6 +462,17 @@ export class ProductionTypeormRepository
     return this.loadOrderView(idProductionOrder);
   }
 
+  async removeOrderItem(
+    idProductionOrder: string,
+    idProductionOrderItem: string,
+  ): Promise<ProductionOrderView> {
+    await this.orderItemRepository.delete({
+      idProductionOrderItem,
+      idProductionOrder,
+    });
+    return this.loadOrderView(idProductionOrder);
+  }
+
   async listOrdersByStore(
     idStore: string,
     filters?: ListProductionOrdersFilters,

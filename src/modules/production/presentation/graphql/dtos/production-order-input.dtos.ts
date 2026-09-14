@@ -197,6 +197,21 @@ export class AddProductionOrderOutputExtraInputDto {
 }
 
 @InputType()
+export class RemoveProductionOrderItemInputDto {
+  @Field()
+  @IsUUID()
+  idStore!: string;
+
+  @Field()
+  @IsUUID()
+  idProductionOrder!: string;
+
+  @Field()
+  @IsUUID()
+  idProductionOrderItem!: string;
+}
+
+@InputType()
 export class RemoveProductionOrderOutputExtraInputDto {
   @Field()
   @IsUUID()
