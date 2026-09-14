@@ -121,6 +121,17 @@ export const productionErrors = {
     status: HttpStatus.NOT_FOUND,
     message: "Saída de produção não encontrada.",
   },
+  orderItemNotFound: {
+    code: "PRODUCTION_ORDER_ITEM_NOT_FOUND",
+    status: HttpStatus.NOT_FOUND,
+    message: "Insumo não encontrado nesta ordem de produção.",
+  },
+  cannotRemoveLastItem: {
+    code: "PRODUCTION_CANNOT_REMOVE_LAST_ITEM",
+    status: HttpStatus.CONFLICT,
+    message:
+      "A ordem de produção precisa de ao menos um insumo — remova a ordem em vez disso, ou sincronize com a receita.",
+  },
   duplicatedOutputExtra: {
     code: "PRODUCTION_DUPLICATED_OUTPUT_EXTRA",
     status: HttpStatus.CONFLICT,

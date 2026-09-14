@@ -215,6 +215,10 @@ export interface ProductionOrderRepositoryPort {
     idProductionOrderOutput: string,
     idProductionOrderOutputExtra: string,
   ): Promise<ProductionOrderView>;
+  removeOrderItem(
+    idProductionOrder: string,
+    idProductionOrderItem: string,
+  ): Promise<ProductionOrderView>;
 }
 
 export const PRODUCTION_ORDER_REPOSITORY = Symbol(

@@ -37,6 +37,7 @@ import {
   GetProductionOrderFilterOptionsInputDto,
   ListProductionOrdersInputDto,
   ProductionOrderScopeInputDto,
+  RemoveProductionOrderItemInputDto,
   RemoveProductionOrderOutputExtraInputDto,
   RemoveProductionOrderOutputInputDto,
   UpdateProductionOrderInputDto,
@@ -276,6 +277,25 @@ export class ProductionResolver {
     return buildDataResponse(
       ProductionOrderResponseDto.fromView(completed),
       RESPONSE_MESSAGES.production.orderConcluded,
+    );
+  }
+
+  @Mutation(() => ProductionOrderMutationResponseDto, {
+    name: "removeProductionOrderItem",
+  })
+  async removeProductionOrderItem(
+    @CurrentUser() user: AuthenticatedUser,
+    @Args("input") input: RemoveProductionOrderItemInputDto,
+  ) {
+    const updated = await this.orderCrud.removeItem(
+      user.idUsers,
+      input.idStore,
+      input.idProductionOrder,
+      input.idProductionOrderItem,
+    );
+    return buildDataResponse(
+      ProductionOrderResponseDto.fromView(updated),
+      RESPONSE_MESSAGES.production.orderUpdated,
     );
   }
 

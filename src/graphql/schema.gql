@@ -1155,6 +1155,7 @@ type Mutation {
   duplicateProductionOrder(input: ProductionOrderScopeInputDto!): ProductionOrderMutationResponseDto!
   updateProductionOrder(input: UpdateProductionOrderInputDto!): ProductionOrderMutationResponseDto!
   completeProductionOrder(input: ProductionOrderScopeInputDto!): ProductionOrderMutationResponseDto!
+  removeProductionOrderItem(input: RemoveProductionOrderItemInputDto!): ProductionOrderMutationResponseDto!
   addProductionOrderOutput(input: AddProductionOrderOutputInputDto!): ProductionOrderMutationResponseDto!
   removeProductionOrderOutput(input: RemoveProductionOrderOutputInputDto!): ProductionOrderMutationResponseDto!
   addProductionOrderOutputExtra(input: AddProductionOrderOutputExtraInputDto!): ProductionOrderMutationResponseDto!
@@ -1546,6 +1547,12 @@ input UpdateProductionOrderInputDto {
   laborCost: Float
   overheadCost: Float
   notes: String
+}
+
+input RemoveProductionOrderItemInputDto {
+  idStore: String!
+  idProductionOrder: String!
+  idProductionOrderItem: String!
 }
 
 input AddProductionOrderOutputInputDto {
