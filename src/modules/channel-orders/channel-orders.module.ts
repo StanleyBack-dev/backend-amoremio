@@ -16,6 +16,9 @@ import { ChannelOrderTypeormRepository } from "@/modules/channel-orders/infrastr
 import { NinetyNineFoodApiClient } from "@/modules/channel-orders/infrastructure/ninety-nine-food/ninety-nine-food-api.client";
 import { NinetyNineFoodAuthService } from "@/modules/channel-orders/infrastructure/ninety-nine-food/ninety-nine-food-auth.service";
 import { NinetyNineFoodWebhookController } from "@/modules/channel-orders/presentation/rest/ninety-nine-food-webhook.controller";
+import { IfoodApiClient } from "@/modules/channel-orders/infrastructure/ifood/ifood-api.client";
+import { IfoodAuthService } from "@/modules/channel-orders/infrastructure/ifood/ifood-auth.service";
+import { IfoodWebhookController } from "@/modules/channel-orders/presentation/rest/ifood-webhook.controller";
 import { ChannelOrdersResolver } from "@/modules/channel-orders/presentation/graphql/resolvers/channel-orders.resolver";
 
 @Module({
@@ -30,7 +33,7 @@ import { ChannelOrdersResolver } from "@/modules/channel-orders/presentation/gra
     CustomersModule,
     SalesModule,
   ],
-  controllers: [NinetyNineFoodWebhookController],
+  controllers: [NinetyNineFoodWebhookController, IfoodWebhookController],
   providers: [
     ChannelOrderTypeormRepository,
     {
@@ -44,6 +47,8 @@ import { ChannelOrdersResolver } from "@/modules/channel-orders/presentation/gra
     ChannelOrdersResolver,
     NinetyNineFoodApiClient,
     NinetyNineFoodAuthService,
+    IfoodApiClient,
+    IfoodAuthService,
   ],
   exports: [IngestChannelOrderUseCase],
 })

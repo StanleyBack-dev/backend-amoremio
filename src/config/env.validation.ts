@@ -145,4 +145,11 @@ export const envValidationSchema = Joi.object({
   // ninety-nine-food-api.client.ts).
   FOOD99_APP_ID: Joi.string().allow("").optional(),
   FOOD99_APP_SECRET: Joi.string().allow("").optional(),
+
+  // === IFOOD INTEGRATION ===
+  // From iFood's Developer Portal, Meus Apps → [app] → Credenciais.
+  // client_secret doubles as both the webhook signature key and the API
+  // auth secret (see verify-ifood-signature.ts and ifood-api.client.ts).
+  IFOOD_CLIENT_ID: Joi.string().allow("").optional(),
+  IFOOD_CLIENT_SECRET: Joi.string().allow("").optional(),
 });
