@@ -12,12 +12,16 @@ function build() {
       grossMarginPercent: 31.8,
       purchaseCount: 2,
       salesCount: 5,
+      productionCost: 90,
     }),
     getStockValue: jest.fn().mockResolvedValue(250),
+    getCustomersCount: jest.fn().mockResolvedValue(3),
     getTopProducts: jest.fn().mockResolvedValue([]),
     getProductProfitability: jest.fn().mockResolvedValue([]),
+    getTopProductionInputs: jest.fn().mockResolvedValue([]),
     getTimeSeries: jest.fn().mockResolvedValue([]),
     getSalesByChannel: jest.fn().mockResolvedValue([]),
+    getSalesByCustomer: jest.fn().mockResolvedValue([]),
   };
   const auth = {
     assertStorePermission: jest.fn().mockResolvedValue(undefined),
@@ -46,6 +50,7 @@ describe("GetFinanceDashboardUseCase", () => {
     expect(result.totals.grossMargin).toBe(280);
     expect(result.totals.netSales).toBe(880);
     expect(result.stockValue).toBe(250);
+    expect(result.customersCount).toBe(3);
     expect(dashboardRepository.getTopProducts).toHaveBeenCalledWith(
       expect.objectContaining({ idStore: "store-1" }),
       8,
