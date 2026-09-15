@@ -126,6 +126,12 @@ export const productionErrors = {
     status: HttpStatus.NOT_FOUND,
     message: "Insumo não encontrado nesta ordem de produção.",
   },
+  duplicatedProductionOrderItem: {
+    code: "PRODUCTION_DUPLICATED_ORDER_ITEM",
+    status: HttpStatus.CONFLICT,
+    message: ({ product }: { product: string }) =>
+      `"${product}" já está entre os insumos desta produção.`,
+  },
   cannotRemoveLastItem: {
     code: "PRODUCTION_CANNOT_REMOVE_LAST_ITEM",
     status: HttpStatus.CONFLICT,

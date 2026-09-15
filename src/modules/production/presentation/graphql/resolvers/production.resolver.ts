@@ -31,6 +31,7 @@ import {
   UpdateRecipeItemInputDto,
 } from "@/modules/production/presentation/graphql/dtos/recipe-input.dtos";
 import {
+  AddProductionOrderItemInputDto,
   AddProductionOrderOutputExtraInputDto,
   AddProductionOrderOutputInputDto,
   CreateProductionOrderInputDto,
@@ -292,6 +293,26 @@ export class ProductionResolver {
       input.idStore,
       input.idProductionOrder,
       input.idProductionOrderItem,
+    );
+    return buildDataResponse(
+      ProductionOrderResponseDto.fromView(updated),
+      RESPONSE_MESSAGES.production.orderUpdated,
+    );
+  }
+
+  @Mutation(() => ProductionOrderMutationResponseDto, {
+    name: "addProductionOrderItem",
+  })
+  async addProductionOrderItem(
+    @CurrentUser() user: AuthenticatedUser,
+    @Args("input") input: AddProductionOrderItemInputDto,
+  ) {
+    const updated = await this.orderCrud.addItem(
+      user.idUsers,
+      input.idStore,
+      input.idProductionOrder,
+      input.idProduct,
+      input.quantity,
     );
     return buildDataResponse(
       ProductionOrderResponseDto.fromView(updated),

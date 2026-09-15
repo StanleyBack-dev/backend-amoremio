@@ -16,6 +16,7 @@ import {
   type UpdateRecipePayload,
 } from "@/modules/production/application/ports/recipe-repository.port";
 import {
+  type AddProductionOrderItemPayload,
   type AddProductionOrderOutputExtraPayload,
   type AddProductionOrderOutputPayload,
   type CompleteProductionOrderPayload,
@@ -471,6 +472,21 @@ export class ProductionTypeormRepository
       idProductionOrder,
     });
     return this.loadOrderView(idProductionOrder);
+  }
+
+  async addOrderItem(
+    payload: AddProductionOrderItemPayload,
+  ): Promise<ProductionOrderView> {
+    await this.orderItemRepository.save(
+      this.orderItemRepository.create({
+        idProductionOrder: payload.idProductionOrder,
+        idProduct: payload.idProduct,
+        productName: payload.productName,
+        quantity: payload.quantity.toFixed(3),
+        unit: payload.unit,
+      }),
+    );
+    return this.loadOrderView(payload.idProductionOrder);
   }
 
   async listOrdersByStore(

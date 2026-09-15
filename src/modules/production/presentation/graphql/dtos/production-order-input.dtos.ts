@@ -197,6 +197,26 @@ export class AddProductionOrderOutputExtraInputDto {
 }
 
 @InputType()
+export class AddProductionOrderItemInputDto {
+  @Field()
+  @IsUUID()
+  idStore!: string;
+
+  @Field()
+  @IsUUID()
+  idProductionOrder!: string;
+
+  @Field()
+  @IsUUID()
+  idProduct!: string;
+
+  @Field(() => Float)
+  @IsNumber()
+  @IsPositive()
+  quantity!: number;
+}
+
+@InputType()
 export class RemoveProductionOrderItemInputDto {
   @Field()
   @IsUUID()
