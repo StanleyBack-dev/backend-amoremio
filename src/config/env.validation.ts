@@ -129,4 +129,20 @@ export const envValidationSchema = Joi.object({
   AWS_SECRET_ACCESS_KEY: Joi.string().allow("").optional(),
   AWS_REGION: Joi.string().allow("").optional(),
   AWS_S3_BUCKET: Joi.string().allow("").optional(),
+
+  // === CHANNEL ORDER INGESTION (webhooks) ===
+  // idtb_users of the seeded system/service account used as createdByUserId
+  // for everything a channel webhook creates automatically (see
+  // src/scripts/seed-system-user.script.ts). Required only once the
+  // channel-orders module actually starts ingesting; left optional here so
+  // environments that haven't run the seed script yet still boot.
+  SYSTEM_USER_ID: Joi.string().uuid().allow("").optional(),
+
+  // === 99FOOD INTEGRATION ===
+  // From 99Food's Application Management, once the app is created there.
+  // app_secret doubles as both the webhook signature key and the API auth
+  // secret (see verify-ninety-nine-food-signature.ts and
+  // ninety-nine-food-api.client.ts).
+  FOOD99_APP_ID: Joi.string().allow("").optional(),
+  FOOD99_APP_SECRET: Joi.string().allow("").optional(),
 });

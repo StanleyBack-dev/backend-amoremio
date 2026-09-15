@@ -17,6 +17,7 @@ import { DatabaseModule } from "@/database/database.module";
 import { AuthModule } from "@/modules/auth/auth.module";
 import { BrandsModule } from "@/modules/brands/brands.module";
 import { CatalogModule } from "@/modules/catalog/catalog.module";
+import { ChannelOrdersModule } from "@/modules/channel-orders/channel-orders.module";
 import { CustomersModule } from "@/modules/customers/customers.module";
 import { InventoryModule } from "@/modules/inventory/inventory.module";
 import { ExcelGeneratorModule } from "@/modules/excel-generator/excel-generator.module";
@@ -59,6 +60,7 @@ import { UsersModule } from "@/modules/users/users.module";
     PurchasingModule,
     ShoppingListModule,
     SalesModule,
+    ChannelOrdersModule,
     ProductionModule,
     FinanceDashboardModule,
     PdfGeneratorModule,

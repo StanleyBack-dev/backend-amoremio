@@ -3,6 +3,7 @@ import { authErrors } from "@/common/exceptions/catalogs/auth-errors.catalog";
 import { authorizationErrors } from "@/common/exceptions/catalogs/authorization-errors.catalog";
 import { brandsErrors } from "@/common/exceptions/catalogs/brands-errors.catalog";
 import { catalogErrors } from "@/common/exceptions/catalogs/catalog-errors.catalog";
+import { channelOrdersErrors } from "@/common/exceptions/catalogs/channel-orders-errors.catalog";
 import { customersErrors } from "@/common/exceptions/catalogs/customers-errors.catalog";
 import { internalErrors } from "@/common/exceptions/catalogs/internal-errors.catalog";
 import { inventoryErrors } from "@/common/exceptions/catalogs/inventory-errors.catalog";
@@ -25,6 +26,7 @@ export const APP_ERRORS = {
   authorization: authorizationErrors,
   brands: brandsErrors,
   catalog: catalogErrors,
+  channelOrders: channelOrdersErrors,
   customers: customersErrors,
   inventory: inventoryErrors,
   production: productionErrors,
