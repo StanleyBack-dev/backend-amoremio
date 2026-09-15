@@ -260,6 +260,16 @@ export const RESPONSE_MESSAGES = {
       message: "Clientes carregados com sucesso.",
     },
   },
+  channelOrders: {
+    productMapped: {
+      code: "CHANNEL_PRODUCT_MAPPED",
+      message: "Produto mapeado com sucesso.",
+    },
+    listed: {
+      code: "CHANNEL_UNMAPPED_PRODUCTS_LISTED",
+      message: "Produtos pendentes de mapeamento carregados com sucesso.",
+    },
+  },
   profiles: {
     updated: {
       code: "PROFILE_UPDATED",
