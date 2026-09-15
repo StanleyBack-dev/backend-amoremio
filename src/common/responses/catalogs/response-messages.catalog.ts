@@ -246,6 +246,20 @@ export const RESPONSE_MESSAGES = {
       message: "Fornecedores carregados com sucesso.",
     },
   },
+  customers: {
+    created: {
+      code: "CUSTOMER_CREATED",
+      message: "Cliente criado com sucesso.",
+    },
+    updated: {
+      code: "CUSTOMER_UPDATED",
+      message: "Cliente atualizado com sucesso.",
+    },
+    listed: {
+      code: "CUSTOMERS_LISTED",
+      message: "Clientes carregados com sucesso.",
+    },
+  },
   profiles: {
     updated: {
       code: "PROFILE_UPDATED",

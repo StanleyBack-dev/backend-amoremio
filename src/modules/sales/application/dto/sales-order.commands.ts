@@ -4,6 +4,7 @@ import type { SalesOrderStatus } from "@/modules/sales/domain/enums/sales-order-
 
 export class CreateSalesOrderCommand {
   idStore!: string;
+  idCustomer?: string | null;
   customerName?: string | null;
   orderDate?: Date;
   salesChannel?: SalesChannel;
@@ -13,6 +14,7 @@ export class CreateSalesOrderCommand {
 export class UpdateSalesOrderHeaderCommand {
   idStore!: string;
   idSalesOrder!: string;
+  idCustomer?: string | null;
   customerName?: string | null;
   orderDate?: Date;
   salesChannel?: SalesChannel;

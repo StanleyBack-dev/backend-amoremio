@@ -50,6 +50,7 @@ export class SalesOrderResponseDto {
     const dto = new SalesOrderResponseDto();
     dto.idSalesOrder = view.idSalesOrder;
     dto.idStore = view.idStore;
+    dto.idCustomer = view.idCustomer;
     dto.customerName = view.customerName;
     dto.orderDate = view.orderDate;
     dto.status = view.status;
@@ -79,6 +80,9 @@ export class SalesOrderResponseDto {
 
   @Field()
   idStore!: string;
+
+  @Field(() => String, { nullable: true })
+  idCustomer?: string | null;
 
   @Field(() => String, { nullable: true })
   customerName?: string | null;

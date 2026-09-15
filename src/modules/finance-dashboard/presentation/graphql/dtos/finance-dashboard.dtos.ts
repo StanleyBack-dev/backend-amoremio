@@ -43,11 +43,22 @@ class DashboardTotalsDto {
   @Field(() => Float) grossMarginPercent!: number;
   @Field(() => Int) purchaseCount!: number;
   @Field(() => Int) salesCount!: number;
+  @Field(() => Float) productionCost!: number;
 }
 
 @ObjectType()
 class SalesChannelDto {
   @Field() channel!: string;
+  @Field(() => Int) orderCount!: number;
+  @Field(() => Float) grossSales!: number;
+  @Field(() => Float) commission!: number;
+  @Field(() => Float) netSales!: number;
+}
+
+@ObjectType()
+class CustomerSalesDto {
+  @Field(() => String, { nullable: true }) idCustomer!: string | null;
+  @Field() customerName!: string;
   @Field(() => Int) orderCount!: number;
   @Field(() => Float) grossSales!: number;
   @Field(() => Float) commission!: number;
@@ -76,6 +87,14 @@ class ProductProfitabilityDto {
 }
 
 @ObjectType()
+class ProductionInputDto {
+  @Field() idProduct!: string;
+  @Field() productName!: string;
+  @Field(() => Float) quantityConsumed!: number;
+  @Field(() => Float) cost!: number;
+}
+
+@ObjectType()
 class TimeSeriesPointDto {
   @Field() date!: string;
   @Field(() => Float) purchases!: number;
@@ -92,11 +111,15 @@ export class FinanceDashboardResponseDto {
     dto.to = result.to;
     dto.totals = result.totals;
     dto.stockValue = result.stockValue;
+    dto.customersCount = result.customersCount;
+    dto.giveawaysCost = result.giveawaysCost;
     dto.topProducts = result.topProducts;
     dto.productProfitability = result.productProfitability;
+    dto.topProductionInputs = result.topProductionInputs;
     dto.granularity = result.granularity as DashboardGranularityEnum;
     dto.timeSeries = result.timeSeries;
     dto.salesByChannel = result.salesByChannel;
+    dto.salesByCustomer = result.salesByCustomer;
     return dto;
   }
 
@@ -112,11 +135,20 @@ export class FinanceDashboardResponseDto {
   @Field(() => Float)
   stockValue!: number;
 
+  @Field(() => Int)
+  customersCount!: number;
+
+  @Field(() => Float)
+  giveawaysCost!: number;
+
   @Field(() => [TopProductDto])
   topProducts!: TopProductDto[];
 
   @Field(() => [ProductProfitabilityDto])
   productProfitability!: ProductProfitabilityDto[];
+
+  @Field(() => [ProductionInputDto])
+  topProductionInputs!: ProductionInputDto[];
 
   @Field(() => DashboardGranularityEnum)
   granularity!: DashboardGranularityEnum;
@@ -126,4 +158,7 @@ export class FinanceDashboardResponseDto {
 
   @Field(() => [SalesChannelDto])
   salesByChannel!: SalesChannelDto[];
+
+  @Field(() => [CustomerSalesDto])
+  salesByCustomer!: CustomerSalesDto[];
 }

@@ -7,6 +7,10 @@ import {
   type ProductRepositoryPort,
 } from "@/modules/catalog/application/ports/product-repository.port";
 import {
+  CUSTOMER_REPOSITORY,
+  type CustomerRepositoryPort,
+} from "@/modules/customers/application/ports/customer-repository.port";
+import {
   SELLABLE_KINDS,
   type ProductKind,
 } from "@/modules/catalog/domain/enums/product-kind.enum";
@@ -50,6 +54,8 @@ export class SalesOrderCrudUseCases {
     private readonly salesOrderRepository: SalesOrderRepositoryPort,
     @Inject(PRODUCT_REPOSITORY)
     private readonly productRepository: ProductRepositoryPort,
+    @Inject(CUSTOMER_REPOSITORY)
+    private readonly customerRepository: CustomerRepositoryPort,
     private readonly storeAuthorizationService: StoreAuthorizationService,
   ) {}
 
@@ -61,14 +67,39 @@ export class SalesOrderCrudUseCases {
     );
   }
 
+  // A linked customer's name is the source of truth for the order's display
+  // snapshot — same relationship as a sale item's idProduct/productName —
+  // so the two never drift apart. Orders with no linked customer keep the
+  // free-text name exactly as before (walk-ins, legacy orders).
+  private async resolveCustomerName(
+    idStore: string,
+    idCustomer: string,
+  ): Promise<string> {
+    const customer = await this.customerRepository.findById(
+      idStore,
+      idCustomer,
+    );
+    if (!customer) {
+      throw AppException.from(APP_ERRORS.customers.notFound, undefined);
+    }
+    return customer.name;
+  }
+
   async create(
     userId: string,
     command: CreateSalesOrderCommand,
   ): Promise<SalesOrderView> {
     await this.assert(userId, command.idStore);
+
+    const idCustomer = command.idCustomer ?? null;
+    const customerName = idCustomer
+      ? await this.resolveCustomerName(command.idStore, idCustomer)
+      : (command.customerName ?? "").trim() || null;
+
     return this.salesOrderRepository.create({
       idStore: command.idStore,
-      customerName: (command.customerName ?? "").trim() || null,
+      idCustomer,
+      customerName,
       orderDate: command.orderDate ?? currentDateOnly(),
       salesChannel: command.salesChannel ?? SalesChannel.BALCAO,
       notes: (command.notes ?? "").trim() || null,
@@ -145,6 +176,7 @@ export class SalesOrderCrudUseCases {
     }
     if (order.status !== SalesOrderStatus.ABERTA) {
       const touchesLockedFields =
+        command.idCustomer !== undefined ||
         command.customerName !== undefined ||
         command.salesChannel !== undefined ||
         command.commissionPercent !== undefined ||
@@ -157,12 +189,25 @@ export class SalesOrderCrudUseCases {
       }
     }
 
+    // idCustomer, when present, wins over free-text customerName and drives
+    // its snapshot (see resolveCustomerName). Passing idCustomer: null
+    // unlinks the customer and clears the name; omitting it entirely falls
+    // back to the legacy free-text path, untouched.
+    let idCustomer: string | null | undefined;
+    let customerName: string | null | undefined;
+    if (command.idCustomer !== undefined) {
+      idCustomer = command.idCustomer;
+      customerName = idCustomer
+        ? await this.resolveCustomerName(command.idStore, idCustomer)
+        : null;
+    } else if (command.customerName !== undefined) {
+      customerName = (command.customerName ?? "").trim() || null;
+    }
+
     return this.salesOrderRepository.updateHeader({
       idSalesOrder: command.idSalesOrder,
-      customerName:
-        command.customerName !== undefined
-          ? (command.customerName ?? "").trim() || null
-          : undefined,
+      idCustomer,
+      customerName,
       orderDate: command.orderDate,
       salesChannel: command.salesChannel,
       commissionPercent:

@@ -20,6 +20,15 @@ export class SalesOrderEntity {
   @Index()
   idStore!: string;
 
+  // Nullable: older orders (and walk-ins nobody bothered to register) have
+  // no linked customer, only the free-text snapshot below.
+  @Column({ name: "idtb_customers", type: "uuid", nullable: true })
+  @Index()
+  idCustomer?: string | null;
+
+  // Snapshot of the customer's name at order time — same pattern as
+  // SalesOrderItemEntity.productName next to idProduct — so history reads
+  // correctly even if the customer record is later renamed.
   @Column({
     name: "customer_name",
     type: "varchar",

@@ -26,6 +26,11 @@ export class CreateSalesOrderInputDto {
 
   @Field(() => String, { nullable: true })
   @IsOptional()
+  @IsUUID()
+  idCustomer?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
   @IsString()
   @MaxLength(160)
   customerName?: string;
@@ -114,6 +119,11 @@ export class UpdateSalesOrderHeaderInputDto {
   @Field()
   @IsUUID()
   idSalesOrder!: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsUUID()
+  idCustomer?: string | null;
 
   @Field(() => String, { nullable: true })
   @IsOptional()
