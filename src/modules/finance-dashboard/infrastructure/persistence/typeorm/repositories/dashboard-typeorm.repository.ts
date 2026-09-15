@@ -1,10 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { DataSource } from "typeorm";
 import {
+  type CustomerSalesRow,
   type DashboardGranularity,
   type DashboardPeriod,
   type DashboardRepositoryPort,
   type DashboardTotals,
+  type ProductionInputRow,
   type ProductProfitRow,
   type SalesChannelRow,
   type TimeSeriesPoint,
@@ -50,6 +52,19 @@ export class DashboardTypeormRepository implements DashboardRepositoryPort {
       [period.idStore, StockMovementType.SAIDA_VENDA, period.from, period.to],
     );
 
+    const production = await this.dataSource.query(
+      `SELECT COALESCE(SUM(quantity * unit_cost), 0) AS cost
+         FROM tb_stock_movements
+        WHERE idtb_stores = $1 AND type = $2
+          AND occurred_at BETWEEN $3 AND $4`,
+      [
+        period.idStore,
+        StockMovementType.SAIDA_PRODUCAO,
+        period.from,
+        period.to,
+      ],
+    );
+
     const totalPurchases = num(purchases[0]?.total);
     const totalSales = num(sales[0]?.total);
     const totalCommission = num(sales[0]?.commission);
@@ -69,7 +84,41 @@ export class DashboardTypeormRepository implements DashboardRepositoryPort {
         netSales > 0 ? num((grossMargin / netSales) * 100) : 0,
       purchaseCount: Number(purchases[0]?.count ?? 0),
       salesCount: Number(sales[0]?.count ?? 0),
+      productionCost: num(production[0]?.cost),
     };
+  }
+
+  async getTopProductionInputs(
+    period: DashboardPeriod,
+    limit: number,
+  ): Promise<ProductionInputRow[]> {
+    const rows = await this.dataSource.query(
+      `SELECT m.idtb_products AS id_product,
+              p.name AS product_name,
+              COALESCE(SUM(m.quantity), 0) AS quantity_consumed,
+              COALESCE(SUM(m.quantity * m.unit_cost), 0) AS cost
+         FROM tb_stock_movements m
+         JOIN tb_products p ON p.idtb_products = m.idtb_products
+        WHERE m.idtb_stores = $1 AND m.type = $2
+          AND m.occurred_at BETWEEN $3 AND $4
+        GROUP BY m.idtb_products, p.name
+        ORDER BY cost DESC
+        LIMIT $5`,
+      [
+        period.idStore,
+        StockMovementType.SAIDA_PRODUCAO,
+        period.from,
+        period.to,
+        limit,
+      ],
+    );
+
+    return rows.map((row: Record<string, unknown>) => ({
+      idProduct: String(row.id_product),
+      productName: String(row.product_name),
+      quantityConsumed: num(row.quantity_consumed),
+      cost: num(row.cost),
+    }));
   }
 
   async getSalesByChannel(period: DashboardPeriod): Promise<SalesChannelRow[]> {
@@ -104,6 +153,52 @@ export class DashboardTypeormRepository implements DashboardRepositoryPort {
       [idStore],
     );
     return num(rows[0]?.value);
+  }
+
+  async getCustomersCount(idStore: string): Promise<number> {
+    const rows = await this.dataSource.query(
+      `SELECT COUNT(*)::int AS count FROM tb_customers
+        WHERE idtb_stores = $1 AND status = true`,
+      [idStore],
+    );
+    return Number(rows[0]?.count ?? 0);
+  }
+
+  async getSalesByCustomer(
+    period: DashboardPeriod,
+    limit: number,
+  ): Promise<CustomerSalesRow[]> {
+    // Grouped by the linked customer id when there is one, falling back to
+    // the free-text name for legacy/unlinked orders — so a registered
+    // customer's repeat orders roll up into one row even if the snapshot
+    // name was typed slightly differently before the link existed.
+    const rows = await this.dataSource.query(
+      `SELECT so.idtb_customers AS id_customer,
+              COALESCE(c.name, so.customer_name, 'Sem cliente') AS customer_name,
+              COUNT(*) AS order_count,
+              COALESCE(SUM(so.total), 0) AS gross_sales,
+              COALESCE(SUM(so.commission_amount), 0) AS commission,
+              COALESCE(SUM(so.net_total), 0) AS net_sales
+         FROM tb_sales_orders so
+         LEFT JOIN tb_customers c ON c.idtb_customers = so.idtb_customers
+        WHERE so.idtb_stores = $1 AND so.status = $2
+          AND so.order_date BETWEEN $3 AND $4
+        GROUP BY COALESCE(so.idtb_customers::text, so.customer_name, ''),
+                 so.idtb_customers,
+                 COALESCE(c.name, so.customer_name, 'Sem cliente')
+        ORDER BY gross_sales DESC
+        LIMIT $5`,
+      [period.idStore, SalesOrderStatus.CONFIRMADA, period.from, period.to, limit],
+    );
+
+    return rows.map((row: Record<string, unknown>) => ({
+      idCustomer: row.id_customer ? String(row.id_customer) : null,
+      customerName: String(row.customer_name),
+      orderCount: Number(row.order_count ?? 0),
+      grossSales: num(row.gross_sales),
+      commission: num(row.commission),
+      netSales: num(row.net_sales),
+    }));
   }
 
   async getTopProducts(

@@ -4,9 +4,11 @@ import { StoreAuthorizationService } from "@/modules/stores/application/use-case
 import { StorePermission } from "@/modules/stores/domain/enums/store-permission.enum";
 import {
   DASHBOARD_REPOSITORY,
+  type CustomerSalesRow,
   type DashboardGranularity,
   type DashboardRepositoryPort,
   type DashboardTotals,
+  type ProductionInputRow,
   type ProductProfitRow,
   type SalesChannelRow,
   type TimeSeriesPoint,
@@ -18,11 +20,19 @@ export interface FinanceDashboardResult {
   to: Date;
   totals: DashboardTotals;
   stockValue: number;
+  customersCount: number;
+  // Cost of confirmed-sale lines with zero unit price (colher, canudo,
+  // saco, balinha…) — derived from productProfitability, not a separate
+  // query: real money spent that never shows up in "Top produtos por
+  // receita" because there is no revenue to rank by.
+  giveawaysCost: number;
   topProducts: TopProductRow[];
   productProfitability: ProductProfitRow[];
+  topProductionInputs: ProductionInputRow[];
   granularity: DashboardGranularity;
   timeSeries: TimeSeriesPoint[];
   salesByChannel: SalesChannelRow[];
+  salesByCustomer: CustomerSalesRow[];
 }
 
 export interface GetFinanceDashboardQuery {
@@ -73,29 +83,43 @@ export class GetFinanceDashboardUseCase {
     const [
       totals,
       stockValue,
+      customersCount,
       topProducts,
       productProfitability,
+      topProductionInputs,
       timeSeries,
       salesByChannel,
+      salesByCustomer,
     ] = await Promise.all([
       this.dashboardRepository.getTotals(period),
       this.dashboardRepository.getStockValue(query.idStore),
+      this.dashboardRepository.getCustomersCount(query.idStore),
       this.dashboardRepository.getTopProducts(period, 8),
       this.dashboardRepository.getProductProfitability(period),
+      this.dashboardRepository.getTopProductionInputs(period, 8),
       this.dashboardRepository.getTimeSeries(period, granularity),
       this.dashboardRepository.getSalesByChannel(period),
+      this.dashboardRepository.getSalesByCustomer(period, 8),
     ]);
+
+    const giveawaysCost = productProfitability
+      .filter((row) => row.revenue === 0)
+      .reduce((sum, row) => sum + row.cost, 0);
 
     return {
       from,
       to,
       totals,
       stockValue,
+      customersCount,
+      giveawaysCost: Math.round(giveawaysCost * 100) / 100,
       topProducts,
       productProfitability,
+      topProductionInputs,
       granularity,
       timeSeries,
       salesByChannel,
+      salesByCustomer,
     };
   }
 }

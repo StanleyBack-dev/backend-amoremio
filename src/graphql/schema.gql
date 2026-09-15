@@ -229,6 +229,45 @@ type ProductMutationResponseDto {
   data: ProductResponseDto!
 }
 
+type CustomerResponseDto {
+  idCustomer: String!
+  idStore: String!
+  name: String!
+  phone: String
+  email: String
+  address: String
+  notes: String
+  status: Boolean!
+  createdByUserId: String!
+  createdByUserName: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type CustomerFilterOptionsDto {
+  names: [String!]!
+  creators: [UserOptionDto!]!
+}
+
+type ListCustomersResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  items: [CustomerResponseDto!]!
+  total: Int!
+  currentPage: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+}
+
+type CustomerMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: CustomerResponseDto!
+}
+
 type SuccessResponseDto {
   success: Boolean!
   message: String
@@ -313,10 +352,20 @@ type DashboardTotalsDto {
   grossMarginPercent: Float!
   purchaseCount: Int!
   salesCount: Int!
+  productionCost: Float!
 }
 
 type SalesChannelDto {
   channel: String!
+  orderCount: Int!
+  grossSales: Float!
+  commission: Float!
+  netSales: Float!
+}
+
+type CustomerSalesDto {
+  idCustomer: String
+  customerName: String!
   orderCount: Int!
   grossSales: Float!
   commission: Float!
@@ -342,6 +391,13 @@ type ProductProfitabilityDto {
   marginPercent: Float!
 }
 
+type ProductionInputDto {
+  idProduct: String!
+  productName: String!
+  quantityConsumed: Float!
+  cost: Float!
+}
+
 type TimeSeriesPointDto {
   date: String!
   purchases: Float!
@@ -353,11 +409,15 @@ type FinanceDashboardResponseDto {
   to: DateTime!
   totals: DashboardTotalsDto!
   stockValue: Float!
+  customersCount: Int!
+  giveawaysCost: Float!
   topProducts: [TopProductDto!]!
   productProfitability: [ProductProfitabilityDto!]!
+  topProductionInputs: [ProductionInputDto!]!
   granularity: DashboardGranularity!
   timeSeries: [TimeSeriesPointDto!]!
   salesByChannel: [SalesChannelDto!]!
+  salesByCustomer: [CustomerSalesDto!]!
 }
 
 enum DashboardGranularity {
@@ -585,6 +645,7 @@ type SalesOrderItemResponseDto {
 type SalesOrderResponseDto {
   idSalesOrder: String!
   idStore: String!
+  idCustomer: String
   customerName: String
   orderDate: DateTime!
   status: SalesOrderStatus!
@@ -880,6 +941,9 @@ type Query {
   getStoreSuppliers(input: ListSuppliersInputDto!): ListSuppliersResponseDto!
   getStoreSupplierFilterOptions(input: GetSupplierFilterOptionsInputDto!): SupplierFilterOptionsDto!
   getSupplierById(input: GetSupplierByIdInputDto!): SupplierResponseDto!
+  getStoreCustomers(input: ListCustomersInputDto!): ListCustomersResponseDto!
+  getStoreCustomerFilterOptions(input: GetCustomerFilterOptionsInputDto!): CustomerFilterOptionsDto!
+  getCustomerById(input: GetCustomerByIdInputDto!): CustomerResponseDto!
   getStoreStock(input: ListStoreStockInputDto!): ListStoreStockResponseDto!
   getStockMovements(input: ListStockMovementsInputDto!): ListStockMovementsResponseDto!
   getStorePurchases(input: ListPurchasesInputDto!): ListPurchasesResponseDto!
@@ -982,6 +1046,25 @@ input GetSupplierFilterOptionsInputDto {
 input GetSupplierByIdInputDto {
   idStore: String!
   idSupplier: String!
+}
+
+input ListCustomersInputDto {
+  idStore: String!
+  page: Int
+  limit: Int
+  search: String
+  status: Boolean
+  name: String
+  createdByUserId: String
+}
+
+input GetCustomerFilterOptionsInputDto {
+  idStore: String!
+}
+
+input GetCustomerByIdInputDto {
+  idStore: String!
+  idCustomer: String!
 }
 
 input ListStoreStockInputDto {
@@ -1121,6 +1204,8 @@ type Mutation {
   updateBrand(input: UpdateBrandInputDto!): BrandMutationResponseDto!
   createSupplier(input: CreateSupplierInputDto!): SupplierMutationResponseDto!
   updateSupplier(input: UpdateSupplierInputDto!): SupplierMutationResponseDto!
+  createCustomer(input: CreateCustomerInputDto!): CustomerMutationResponseDto!
+  updateCustomer(input: UpdateCustomerInputDto!): CustomerMutationResponseDto!
   adjustStock(input: AdjustStockInputDto!): SuccessResponseDto!
   createPurchaseDraft(input: CreatePurchaseDraftInputDto!): PurchaseMutationResponseDto!
   updatePurchaseHeader(input: UpdatePurchaseHeaderInputDto!): PurchaseMutationResponseDto!
@@ -1329,6 +1414,27 @@ input UpdateSupplierInputDto {
   status: Boolean
 }
 
+input CreateCustomerInputDto {
+  idStore: String!
+  name: String!
+  phone: String
+  email: String
+  address: String
+  notes: String
+  status: Boolean
+}
+
+input UpdateCustomerInputDto {
+  idStore: String!
+  idCustomer: String!
+  name: String
+  phone: String
+  email: String
+  address: String
+  notes: String
+  status: Boolean
+}
+
 input AdjustStockInputDto {
   idStore: String!
   idProduct: String!
@@ -1426,6 +1532,7 @@ input RemoveShoppingListItemInputDto {
 
 input CreateSalesOrderInputDto {
   idStore: String!
+  idCustomer: String
   customerName: String
   orderDate: DateTime
   salesChannel: SalesChannel
@@ -1435,6 +1542,7 @@ input CreateSalesOrderInputDto {
 input UpdateSalesOrderHeaderInputDto {
   idStore: String!
   idSalesOrder: String!
+  idCustomer: String
   customerName: String
   orderDate: DateTime
   salesChannel: SalesChannel

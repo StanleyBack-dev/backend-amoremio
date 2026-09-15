@@ -16,10 +16,24 @@ export type DashboardTotals = {
   grossMarginPercent: number;
   purchaseCount: number;
   salesCount: number;
+  // Cost of insumos consumed by completed production orders in the period
+  // (SAIDA_PRODUCAO) — the actual production spend, independent of whether
+  // the goods it produced were sold yet.
+  productionCost: number;
 };
 
 export type SalesChannelRow = {
   channel: string;
+  orderCount: number;
+  grossSales: number;
+  commission: number;
+  netSales: number;
+};
+
+export type CustomerSalesRow = {
+  // Null for legacy/unlinked orders grouped only by their free-text name.
+  idCustomer: string | null;
+  customerName: string;
   orderCount: number;
   grossSales: number;
   commission: number;
@@ -49,6 +63,13 @@ export type ProductProfitRow = {
   marginPercent: number;
 };
 
+export type ProductionInputRow = {
+  idProduct: string;
+  productName: string;
+  quantityConsumed: number;
+  cost: number;
+};
+
 export type DashboardGranularity = "day" | "week" | "month";
 
 export type TimeSeriesPoint = {
@@ -60,6 +81,9 @@ export type TimeSeriesPoint = {
 export interface DashboardRepositoryPort {
   getTotals(period: DashboardPeriod): Promise<DashboardTotals>;
   getStockValue(idStore: string): Promise<number>;
+  // All-time headcount of active customers — not period-scoped, same as
+  // getStockValue (a snapshot of "now", not a range).
+  getCustomersCount(idStore: string): Promise<number>;
   getTopProducts(
     period: DashboardPeriod,
     limit: number,
@@ -70,6 +94,14 @@ export interface DashboardRepositoryPort {
     granularity: DashboardGranularity,
   ): Promise<TimeSeriesPoint[]>;
   getSalesByChannel(period: DashboardPeriod): Promise<SalesChannelRow[]>;
+  getSalesByCustomer(
+    period: DashboardPeriod,
+    limit: number,
+  ): Promise<CustomerSalesRow[]>;
+  getTopProductionInputs(
+    period: DashboardPeriod,
+    limit: number,
+  ): Promise<ProductionInputRow[]>;
 }
 
 export const DASHBOARD_REPOSITORY = Symbol("DASHBOARD_REPOSITORY");
