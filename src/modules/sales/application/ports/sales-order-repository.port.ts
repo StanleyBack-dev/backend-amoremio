@@ -16,6 +16,7 @@ export type SalesOrderItemView = {
 export type SalesOrderView = {
   idSalesOrder: string;
   idStore: string;
+  idCustomer: string | null;
   customerName: string | null;
   orderDate: Date;
   status: SalesOrderStatus;
@@ -50,6 +51,7 @@ export type SalesOrderFilterOptions = {
 
 export type CreateSalesOrderPayload = {
   idStore: string;
+  idCustomer: string | null;
   customerName: string | null;
   orderDate: Date;
   salesChannel: SalesChannel;
@@ -59,6 +61,7 @@ export type CreateSalesOrderPayload = {
 
 export type UpdateSalesOrderHeaderPayload = {
   idSalesOrder: string;
+  idCustomer?: string | null;
   customerName?: string | null;
   orderDate?: Date;
   salesChannel?: SalesChannel;

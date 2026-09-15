@@ -37,6 +37,7 @@ export class SalesOrderTypeormRepository implements SalesOrderRepositoryPort {
     const saved = await this.orderRepository.save(
       this.orderRepository.create({
         idStore: payload.idStore,
+        idCustomer: payload.idCustomer,
         customerName: payload.customerName,
         orderDate: payload.orderDate,
         salesChannel: payload.salesChannel,
@@ -131,6 +132,7 @@ export class SalesOrderTypeormRepository implements SalesOrderRepositoryPort {
   ): Promise<SalesOrderView> {
     const order = await this.getOrFail(payload.idSalesOrder);
 
+    if (payload.idCustomer !== undefined) order.idCustomer = payload.idCustomer;
     if (payload.customerName !== undefined)
       order.customerName = payload.customerName;
     if (payload.orderDate !== undefined) order.orderDate = payload.orderDate;
@@ -359,6 +361,7 @@ export class SalesOrderTypeormRepository implements SalesOrderRepositoryPort {
     return {
       idSalesOrder: entity.idSalesOrder,
       idStore: entity.idStore,
+      idCustomer: entity.idCustomer ?? null,
       customerName: entity.customerName ?? null,
       orderDate: entity.orderDate,
       status: entity.status,

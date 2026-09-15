@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { CatalogModule } from "@/modules/catalog/catalog.module";
+import { CustomersModule } from "@/modules/customers/customers.module";
 import { InventoryModule } from "@/modules/inventory/inventory.module";
 import { StoresModule } from "@/modules/stores/stores.module";
 import { SALES_ORDER_REPOSITORY } from "@/modules/sales/application/ports/sales-order-repository.port";
@@ -17,6 +18,7 @@ import "@/modules/sales/presentation/graphql/enums/sales-graphql.enums";
   imports: [
     TypeOrmModule.forFeature([SalesOrderEntity, SalesOrderItemEntity]),
     CatalogModule,
+    CustomersModule,
     InventoryModule,
     StoresModule,
   ],
