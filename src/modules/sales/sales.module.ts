@@ -33,5 +33,6 @@ import "@/modules/sales/presentation/graphql/enums/sales-graphql.enums";
     CancelSalesOrderUseCase,
     SalesOrdersResolver,
   ],
+  exports: [SalesOrderCrudUseCases],
 })
 export class SalesModule {}

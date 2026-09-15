@@ -21,6 +21,6 @@ import { CustomersResolver } from "@/modules/customers/presentation/graphql/reso
     ListCustomersUseCase,
     CustomersResolver,
   ],
-  exports: [CUSTOMER_REPOSITORY],
+  exports: [CUSTOMER_REPOSITORY, CreateCustomerUseCase],
 })
 export class CustomersModule {}
