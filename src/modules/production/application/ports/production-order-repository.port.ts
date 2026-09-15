@@ -138,6 +138,14 @@ export type DuplicateProductionOrderPayload = CreateProductionOrderPayload & {
   }[];
 };
 
+export type AddProductionOrderItemPayload = {
+  idProductionOrder: string;
+  idProduct: string;
+  productName: string;
+  quantity: number;
+  unit: string;
+};
+
 export type AddProductionOrderOutputPayload = {
   idProductionOrder: string;
   idProduct: string;
@@ -218,6 +226,9 @@ export interface ProductionOrderRepositoryPort {
   removeOrderItem(
     idProductionOrder: string,
     idProductionOrderItem: string,
+  ): Promise<ProductionOrderView>;
+  addOrderItem(
+    payload: AddProductionOrderItemPayload,
   ): Promise<ProductionOrderView>;
 }
 

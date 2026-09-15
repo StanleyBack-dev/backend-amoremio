@@ -507,18 +507,17 @@ export class ProductionOrderCrudUseCases {
     if (!output) {
       throw AppException.from(APP_ERRORS.production.outputNotFound, undefined);
     }
-    if (output.extras.some((extra) => extra.idProduct === idProduct)) {
-      throw AppException.from(
-        APP_ERRORS.production.duplicatedOutputExtra,
-        undefined,
-      );
-    }
     const product = await this.productRepository.findById(idStore, idProduct);
     if (!product) {
       throw AppException.from(APP_ERRORS.catalog.productNotFound, undefined);
     }
     if (!PRODUCIBLE_INPUT_KINDS.includes(product.kind)) {
       throw AppException.from(APP_ERRORS.production.inputNotInsumo, undefined);
+    }
+    if (output.extras.some((extra) => extra.idProduct === idProduct)) {
+      throw AppException.from(APP_ERRORS.production.duplicatedOutputExtra, {
+        product: product.name,
+      });
     }
     return this.orderRepository.addOutputExtra(idProductionOrder, {
       idProductionOrderOutput,
@@ -586,6 +585,49 @@ export class ProductionOrderCrudUseCases {
       idProductionOrder,
       idProductionOrderItem,
     );
+  }
+
+  // Manually adds one insumo straight to the shared "Insumos a consumir"
+  // list — for something the recipe doesn't call for but this batch still
+  // needs, and that's common to every output rather than tied to one of
+  // them (that case is addOutputExtra). Draft-only, one line per product.
+  async addItem(
+    userId: string,
+    idStore: string,
+    idProductionOrder: string,
+    idProduct: string,
+    quantity: number,
+  ): Promise<ProductionOrderView> {
+    await this.assertRegister(userId, idStore);
+    const order = await loadProductionOrderOrFail(
+      this.orderRepository,
+      idStore,
+      idProductionOrder,
+    );
+    assertDraft(order);
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      throw AppException.from(APP_ERRORS.production.invalidQuantity, undefined);
+    }
+    const product = await this.productRepository.findById(idStore, idProduct);
+    if (!product) {
+      throw AppException.from(APP_ERRORS.catalog.productNotFound, undefined);
+    }
+    if (!PRODUCIBLE_INPUT_KINDS.includes(product.kind)) {
+      throw AppException.from(APP_ERRORS.production.inputNotInsumo, undefined);
+    }
+    if (order.items.some((item) => item.idProduct === idProduct)) {
+      throw AppException.from(
+        APP_ERRORS.production.duplicatedProductionOrderItem,
+        { product: product.name },
+      );
+    }
+    return this.orderRepository.addOrderItem({
+      idProductionOrder,
+      idProduct,
+      productName: product.name,
+      quantity,
+      unit: product.unit,
+    });
   }
 
   async cancel(
