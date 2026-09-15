@@ -188,7 +188,13 @@ export class DashboardTypeormRepository implements DashboardRepositoryPort {
                  COALESCE(c.name, so.customer_name, 'Sem cliente')
         ORDER BY gross_sales DESC
         LIMIT $5`,
-      [period.idStore, SalesOrderStatus.CONFIRMADA, period.from, period.to, limit],
+      [
+        period.idStore,
+        SalesOrderStatus.CONFIRMADA,
+        period.from,
+        period.to,
+        limit,
+      ],
     );
 
     return rows.map((row: Record<string, unknown>) => ({

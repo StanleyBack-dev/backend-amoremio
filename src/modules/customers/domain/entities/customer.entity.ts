@@ -35,7 +35,9 @@ function optionalText(value: string | undefined | null): string | null {
 // shape as tb_stores.whatsapp. This is what makes dedupe by phone reliable:
 // "(11) 91234-5678", "11912345678" and "+55 11 91234-5678" all collapse to
 // the same key, unlike name matching.
-export function normalizePhone(value: string | undefined | null): string | null {
+export function normalizePhone(
+  value: string | undefined | null,
+): string | null {
   const digits = (value ?? "").replace(/\D/g, "");
   return digits || null;
 }

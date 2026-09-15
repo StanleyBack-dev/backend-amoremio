@@ -22,7 +22,9 @@ function optionalEmail(
   value: string | null | undefined,
 ): string | null | undefined {
   const normalized = optionalText(value);
-  return normalized === undefined ? undefined : normalized?.toLowerCase() ?? null;
+  return normalized === undefined
+    ? undefined
+    : (normalized?.toLowerCase() ?? null);
 }
 
 @Injectable()

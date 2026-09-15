@@ -19,9 +19,7 @@ export class CreateCustomers1789500365858 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_sales_orders_customer"`,
-    );
+    await queryRunner.query(`DROP INDEX "public"."IDX_sales_orders_customer"`);
     await queryRunner.query(
       `ALTER TABLE "tb_sales_orders" DROP COLUMN "idtb_customers"`,
     );

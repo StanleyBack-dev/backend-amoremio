@@ -38,10 +38,7 @@ export class CustomersResolver {
     @CurrentUser() user: AuthenticatedUser,
     @Args("input") input: ListCustomersInputDto,
   ) {
-    const result = await this.listCustomersUseCase.execute(
-      user.idUsers,
-      input,
-    );
+    const result = await this.listCustomersUseCase.execute(user.idUsers, input);
     return buildPaginatedListResponse(
       {
         ...result,
