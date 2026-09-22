@@ -19,7 +19,8 @@ export const purchasingErrors = {
   financialsLocked: {
     code: "PURCHASING_FINANCIALS_LOCKED",
     status: HttpStatus.CONFLICT,
-    message: "Frete, desconto e itens não podem ser alterados após finalizar a compra.",
+    message:
+      "Frete, desconto e itens não podem ser alterados após finalizar a compra.",
   },
   finalizedAtRequiresFinalized: {
     code: "PURCHASING_FINALIZED_AT_REQUIRES_FINALIZED",
