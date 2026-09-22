@@ -170,7 +170,9 @@ export class SalesOrderCrudUseCases {
 
     // A cancelled order is read-only. A confirmed one has everything else
     // frozen (stock already debited, totals settled) but the sale date is
-    // just a label — kept correctable after the fact.
+    // just a label — kept correctable after the fact. The sales channel is
+    // the same kind of label: the commission percent is its own frozen
+    // snapshot, so re-tagging the channel never changes any total.
     if (order.status === SalesOrderStatus.CANCELADA) {
       throw AppException.from(APP_ERRORS.sales.notOpen, undefined);
     }
@@ -178,7 +180,6 @@ export class SalesOrderCrudUseCases {
       const touchesLockedFields =
         command.idCustomer !== undefined ||
         command.customerName !== undefined ||
-        command.salesChannel !== undefined ||
         command.commissionPercent !== undefined ||
         command.discountAmount !== undefined ||
         command.discountMode !== undefined ||
