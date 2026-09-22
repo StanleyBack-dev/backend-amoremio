@@ -111,6 +111,14 @@ export class UpdatePurchaseHeaderInputDto {
   @IsOptional()
   purchaseDate?: Date;
 
+  @Field(() => Date, { nullable: true })
+  @IsOptional()
+  createdAt?: Date;
+
+  @Field(() => Date, { nullable: true })
+  @IsOptional()
+  finalizedAt?: Date;
+
   @Field(() => Float, { nullable: true })
   @IsOptional()
   @IsNumber()

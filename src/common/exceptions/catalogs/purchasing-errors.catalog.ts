@@ -20,7 +20,12 @@ export const purchasingErrors = {
     code: "PURCHASING_FINANCIALS_LOCKED",
     status: HttpStatus.CONFLICT,
     message:
-      "Frete, desconto, itens e data não podem ser alterados após finalizar a compra.",
+      "Frete, desconto e itens não podem ser alterados após finalizar a compra.",
+  },
+  finalizedAtRequiresFinalized: {
+    code: "PURCHASING_FINALIZED_AT_REQUIRES_FINALIZED",
+    status: HttpStatus.CONFLICT,
+    message: "O término da compra só existe depois de finalizá-la.",
   },
   emptyPurchase: {
     code: "PURCHASING_EMPTY",

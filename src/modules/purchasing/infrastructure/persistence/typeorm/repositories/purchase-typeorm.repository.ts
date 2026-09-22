@@ -177,6 +177,9 @@ export class PurchaseTypeormRepository implements PurchaseRepositoryPort {
       purchase.supplierName = payload.supplierName;
     if (payload.purchaseDate !== undefined)
       purchase.purchaseDate = payload.purchaseDate;
+    if (payload.createdAt !== undefined) purchase.createdAt = payload.createdAt;
+    if (payload.finalizedAt !== undefined)
+      purchase.finalizedAt = payload.finalizedAt;
     if (payload.freightAmount !== undefined)
       purchase.freightAmount = payload.freightAmount.toFixed(2);
     if (payload.discountAmount !== undefined)

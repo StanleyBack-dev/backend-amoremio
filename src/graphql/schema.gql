@@ -1459,6 +1459,8 @@ input UpdatePurchaseHeaderInputDto {
   idPurchase: String!
   supplierName: String
   purchaseDate: DateTime
+  createdAt: DateTime
+  finalizedAt: DateTime
   freightAmount: Float
   discountAmount: Float
   discountMode: PurchaseDiscountMode

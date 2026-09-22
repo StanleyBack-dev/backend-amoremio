@@ -57,6 +57,8 @@ export type UpdatePurchaseHeaderPayload = {
   idPurchase: string;
   supplierName?: string | null;
   purchaseDate?: Date;
+  createdAt?: Date;
+  finalizedAt?: Date;
   freightAmount?: number;
   discountAmount?: number;
   discountMode?: PurchaseDiscountMode;
