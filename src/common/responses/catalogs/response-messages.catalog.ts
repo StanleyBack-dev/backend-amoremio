@@ -82,6 +82,24 @@ export const RESPONSE_MESSAGES = {
       message: "Membros da loja carregados com sucesso.",
     },
   },
+  attachments: {
+    uploadRequested: {
+      code: "ATTACHMENT_UPLOAD_REQUESTED",
+      message: "Envio da imagem autorizado.",
+    },
+    confirmed: {
+      code: "ATTACHMENT_CONFIRMED",
+      message: "Imagem adicionada com sucesso.",
+    },
+    removed: {
+      code: "ATTACHMENT_REMOVED",
+      message: "Imagem removida com sucesso.",
+    },
+    reordered: {
+      code: "ATTACHMENTS_REORDERED",
+      message: "Ordem das imagens atualizada.",
+    },
+  },
   catalog: {
     created: {
       code: "PRODUCT_CREATED",

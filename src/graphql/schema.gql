@@ -2,6 +2,80 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type SuccessResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+}
+
+type AttachmentResponseDto {
+  idAttachment: String!
+  ownerType: AttachmentOwnerType!
+  ownerId: String!
+
+  """0 is the cover image."""
+  position: Int!
+  mimeType: String!
+  sizeBytes: Int!
+  width: Int
+  height: Int
+  originalName: String!
+
+  """Signed, time-limited URL (valid for at least 1h)."""
+  url: String!
+
+  """Signed, time-limited URL (valid for at least 1h)."""
+  thumbnailUrl: String!
+  createdAt: DateTime!
+}
+
+enum AttachmentOwnerType {
+  PRODUCT
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type UploadFormFieldDto {
+  name: String!
+  value: String!
+}
+
+type AttachmentUploadTicketDto {
+  idAttachment: String!
+
+  """Target of a multipart/form-data POST."""
+  uploadUrl: String!
+
+  """Send these form fields, in order, before the `file` field."""
+  fields: [UploadFormFieldDto!]!
+  expiresAt: DateTime!
+  maxBytes: Int!
+}
+
+type AttachmentUploadTicketResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: AttachmentUploadTicketDto!
+}
+
+type AttachmentMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: AttachmentResponseDto!
+}
+
+type AttachmentsMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: [AttachmentResponseDto!]!
+}
+
 type LogoutResponseDto {
   success: Boolean!
   message: String
@@ -37,11 +111,6 @@ type VerifyPasswordRecoveryCodeResponseDto {
   recoveryToken: String!
   expiresAt: DateTime!
 }
-
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
 
 type VerifyPasswordRecoveryCodeMutationResponseDto {
   success: Boolean!
@@ -170,6 +239,10 @@ type ProductResponseDto {
   createdByUserName: String
   createdAt: DateTime!
   updatedAt: DateTime!
+
+  """Ordered by position; the first one is the cover."""
+  images: [AttachmentResponseDto!]!
+  coverThumbnailUrl: String
 }
 
 enum ProductKind {
@@ -268,12 +341,6 @@ type CustomerMutationResponseDto {
   data: CustomerResponseDto!
 }
 
-type SuccessResponseDto {
-  success: Boolean!
-  message: String
-  code: String
-}
-
 type StockItemResponseDto {
   idProduct: String!
   idStore: String!
@@ -288,6 +355,7 @@ type StockItemResponseDto {
   stockValue: Float!
   reorderPoint: Float
   updatedAt: DateTime
+  productCoverThumbnailUrl: String
 }
 
 type StockMovementResponseDto {
@@ -340,6 +408,113 @@ type ListStockMovementsResponseDto {
   limit: Int!
   totalPages: Int!
   hasNextPage: Boolean!
+}
+
+type SalesOrderItemResponseDto {
+  idSalesOrderItem: String!
+  idProduct: String!
+  productName: String!
+  productKind: ProductKind!
+  quantity: Float!
+  unitPrice: Float!
+  lineTotal: Float!
+  productCoverThumbnailUrl: String
+}
+
+type SalesOrderResponseDto {
+  idSalesOrder: String!
+  idStore: String!
+  idCustomer: String
+  customerName: String
+  orderDate: DateTime!
+  status: SalesOrderStatus!
+  salesChannel: SalesChannel!
+  commissionPercent: Float!
+  commissionAmount: Float!
+  netTotal: Float!
+  discountAmount: Float!
+  discountMode: SalesDiscountMode!
+  discountPercent: Float!
+  itemsSubtotal: Float!
+  total: Float!
+  notes: String
+  createdByUserId: String!
+  createdByUserName: String
+  confirmedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  items: [SalesOrderItemResponseDto!]!
+}
+
+enum SalesOrderStatus {
+  ABERTA
+  CONFIRMADA
+  CANCELADA
+}
+
+enum SalesChannel {
+  BALCAO
+  IFOOD
+  RAPPI
+  FOOD_99
+  UBER_EATS
+  AIQFOME
+  WHATSAPP
+  TELEFONE
+  FACULDADE
+  PESSOAL
+  FAMILIA
+  TRABALHO
+  OUTRO
+}
+
+enum SalesDiscountMode {
+  VALOR
+  PERCENTUAL
+}
+
+type SalesOrderFilterOptionsDto {
+  customers: [String!]!
+  channels: [SalesChannel!]!
+  creators: [UserOptionDto!]!
+}
+
+type ListSalesOrdersResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  items: [SalesOrderResponseDto!]!
+  total: Int!
+  currentPage: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+}
+
+type SalesOrderMutationResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: SalesOrderResponseDto!
+}
+
+type UnmappedChannelProductDto {
+  channel: SalesChannel!
+  externalProductId: String!
+  externalProductName: String!
+  pendingEventCount: Int!
+}
+
+type MapChannelProductResultDto {
+  promotedOrders: Int!
+  failedOrders: Int!
+}
+
+type MapChannelProductResponseDto {
+  success: Boolean!
+  message: String
+  code: String
+  data: MapChannelProductResultDto!
 }
 
 type DashboardTotalsDto {
@@ -632,93 +807,6 @@ type PurchaseMutationResponseDto {
   data: PurchaseResponseDto!
 }
 
-type SalesOrderItemResponseDto {
-  idSalesOrderItem: String!
-  idProduct: String!
-  productName: String!
-  productKind: ProductKind!
-  quantity: Float!
-  unitPrice: Float!
-  lineTotal: Float!
-}
-
-type SalesOrderResponseDto {
-  idSalesOrder: String!
-  idStore: String!
-  idCustomer: String
-  customerName: String
-  orderDate: DateTime!
-  status: SalesOrderStatus!
-  salesChannel: SalesChannel!
-  commissionPercent: Float!
-  commissionAmount: Float!
-  netTotal: Float!
-  discountAmount: Float!
-  discountMode: SalesDiscountMode!
-  discountPercent: Float!
-  itemsSubtotal: Float!
-  total: Float!
-  notes: String
-  createdByUserId: String!
-  createdByUserName: String
-  confirmedAt: DateTime
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  items: [SalesOrderItemResponseDto!]!
-}
-
-enum SalesOrderStatus {
-  ABERTA
-  CONFIRMADA
-  CANCELADA
-}
-
-enum SalesChannel {
-  BALCAO
-  IFOOD
-  RAPPI
-  FOOD_99
-  UBER_EATS
-  AIQFOME
-  WHATSAPP
-  TELEFONE
-  FACULDADE
-  PESSOAL
-  FAMILIA
-  TRABALHO
-  OUTRO
-}
-
-enum SalesDiscountMode {
-  VALOR
-  PERCENTUAL
-}
-
-type SalesOrderFilterOptionsDto {
-  customers: [String!]!
-  channels: [SalesChannel!]!
-  creators: [UserOptionDto!]!
-}
-
-type ListSalesOrdersResponseDto {
-  success: Boolean!
-  message: String
-  code: String
-  items: [SalesOrderResponseDto!]!
-  total: Int!
-  currentPage: Int!
-  limit: Int!
-  totalPages: Int!
-  hasNextPage: Boolean!
-}
-
-type SalesOrderMutationResponseDto {
-  success: Boolean!
-  message: String
-  code: String
-  data: SalesOrderResponseDto!
-}
-
 type ShoppingListItemResponseDto {
   idShoppingListItem: String!
   idProduct: String!
@@ -935,6 +1023,7 @@ type Query {
   getMyStores: [StoreResponseDto!]!
   getStoreById(input: GetStoreByIdInputDto!): StoreResponseDto!
   getStoreMembers(input: GetStoreByIdInputDto!): [StoreMemberResponseDto!]!
+  getAttachments(input: AttachmentOwnerInputDto!): [AttachmentResponseDto!]!
   getStoreProducts(input: ListProductsInputDto!): ListProductsResponseDto!
   getStoreProductFilterOptions(input: GetProductFilterOptionsInputDto!): ProductFilterOptionsDto!
   getProductById(input: GetProductByIdInputDto!): ProductResponseDto!
@@ -958,6 +1047,7 @@ type Query {
   getStoreSalesOrders(input: ListSalesOrdersInputDto!): ListSalesOrdersResponseDto!
   getStoreSalesOrderFilterOptions(input: GetSalesOrderFilterOptionsInputDto!): SalesOrderFilterOptionsDto!
   getSalesOrderById(input: SalesOrderScopeInputDto!): SalesOrderResponseDto!
+  getUnmappedChannelProducts(input: GetUnmappedChannelProductsInputDto!): [UnmappedChannelProductDto!]!
   getStoreRecipes(input: ListRecipesInputDto!): ListRecipesResponseDto!
   getRecipeById(input: RecipeScopeInputDto!): RecipeResponseDto!
   getStoreProductionOrders(input: ListProductionOrdersInputDto!): ListProductionOrdersResponseDto!
@@ -988,6 +1078,12 @@ input GetUserPagePermissionsInputDto {
 
 input GetStoreByIdInputDto {
   idStore: String!
+}
+
+input AttachmentOwnerInputDto {
+  idStore: String!
+  ownerType: AttachmentOwnerType!
+  ownerId: String!
 }
 
 input ListProductsInputDto {
@@ -1146,6 +1242,10 @@ input SalesOrderScopeInputDto {
   idSalesOrder: String!
 }
 
+input GetUnmappedChannelProductsInputDto {
+  idStore: String!
+}
+
 input ListRecipesInputDto {
   idStore: String!
   page: Int
@@ -1201,6 +1301,11 @@ type Mutation {
   addStoreMember(input: AddStoreMemberInputDto!): [StoreMemberResponseDto!]!
   updateStoreMemberRole(input: UpdateStoreMemberRoleInputDto!): [StoreMemberResponseDto!]!
   removeStoreMember(input: RemoveStoreMemberInputDto!): [StoreMemberResponseDto!]!
+  requestAttachmentUpload(input: RequestAttachmentUploadInputDto!): AttachmentUploadTicketResponseDto!
+  confirmAttachmentUpload(input: AttachmentRefInputDto!): AttachmentMutationResponseDto!
+  removeAttachment(input: AttachmentRefInputDto!): SuccessResponseDto!
+  reorderAttachments(input: ReorderAttachmentsInputDto!): AttachmentsMutationResponseDto!
+  setAttachmentAsCover(input: AttachmentRefInputDto!): AttachmentsMutationResponseDto!
   createProduct(input: CreateProductInputDto!): ProductMutationResponseDto!
   updateProduct(input: UpdateProductInputDto!): ProductMutationResponseDto!
   createBrand(input: CreateBrandInputDto!): BrandMutationResponseDto!
@@ -1232,6 +1337,7 @@ type Mutation {
   removeSalesOrderItem(input: RemoveSalesOrderItemInputDto!): SalesOrderMutationResponseDto!
   confirmSalesOrder(input: SalesOrderScopeInputDto!): SalesOrderMutationResponseDto!
   cancelSalesOrder(input: SalesOrderScopeInputDto!): SalesOrderMutationResponseDto!
+  mapChannelProduct(input: MapChannelProductInputDto!): MapChannelProductResponseDto!
   createRecipe(input: CreateRecipeInputDto!): RecipeMutationResponseDto!
   updateRecipe(input: UpdateRecipeInputDto!): RecipeMutationResponseDto!
   addRecipeItem(input: AddRecipeItemInputDto!): RecipeMutationResponseDto!
@@ -1351,6 +1457,27 @@ input UpdateStoreMemberRoleInputDto {
 input RemoveStoreMemberInputDto {
   idStore: String!
   idUsers: String!
+}
+
+input RequestAttachmentUploadInputDto {
+  idStore: String!
+  ownerType: AttachmentOwnerType!
+  ownerId: String!
+  fileName: String!
+  mimeType: String!
+  sizeBytes: Int!
+}
+
+input AttachmentRefInputDto {
+  idStore: String!
+  idAttachment: String!
+}
+
+input ReorderAttachmentsInputDto {
+  idStore: String!
+  ownerType: AttachmentOwnerType!
+  ownerId: String!
+  orderedIds: [String!]!
 }
 
 input CreateProductInputDto {
@@ -1590,6 +1717,14 @@ input RemoveSalesOrderItemInputDto {
   idStore: String!
   idSalesOrder: String!
   idSalesOrderItem: String!
+}
+
+input MapChannelProductInputDto {
+  idStore: String!
+  channel: SalesChannel!
+  externalProductId: String!
+  externalProductName: String!
+  idProduct: String!
 }
 
 input CreateRecipeInputDto {

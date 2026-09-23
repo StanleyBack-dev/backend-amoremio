@@ -14,6 +14,7 @@ import { UpstashRedisProvider } from "@/common/rate-limit/upstash-redis.provider
 import { RequestInfoInterceptor } from "@/common/interceptors/request-info.interceptors";
 import { AppConfigModule } from "@/config/config.module";
 import { DatabaseModule } from "@/database/database.module";
+import { AttachmentsModule } from "@/modules/attachments/attachments.module";
 import { AuthModule } from "@/modules/auth/auth.module";
 import { BrandsModule } from "@/modules/brands/brands.module";
 import { CatalogModule } from "@/modules/catalog/catalog.module";
@@ -52,6 +53,7 @@ import { UsersModule } from "@/modules/users/users.module";
     AuthModule,
     UsersModule,
     StoresModule,
+    AttachmentsModule,
     CatalogModule,
     BrandsModule,
     SuppliersModule,
