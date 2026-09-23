@@ -1,6 +1,7 @@
 import { Args, Query, Resolver } from "@nestjs/graphql";
 import { CurrentUser } from "@/common/decorators/current-user.decorator";
 import type { AuthenticatedUser } from "@/modules/auth/domain/interfaces/auth-token-payload.interface";
+import { ProductCoverService } from "@/modules/catalog/application/services/product-cover.service";
 import { GetFinanceDashboardUseCase } from "@/modules/finance-dashboard/application/use-cases/get-finance-dashboard.use-case";
 import {
   FinanceDashboardInputDto,
@@ -11,6 +12,7 @@ import {
 export class FinanceDashboardResolver {
   constructor(
     private readonly getFinanceDashboardUseCase: GetFinanceDashboardUseCase,
+    private readonly productCoverService: ProductCoverService,
   ) {}
 
   @Query(() => FinanceDashboardResponseDto, { name: "getFinanceDashboard" })
@@ -23,6 +25,15 @@ export class FinanceDashboardResolver {
       from: input.from,
       to: input.to,
     });
-    return FinanceDashboardResponseDto.fromResult(result);
+    // One batched lookup for every product shown on the dashboard.
+    const covers = await this.productCoverService.thumbnailsFor(
+      input.idStore,
+      [
+        ...result.topProducts,
+        ...result.productProfitability,
+        ...result.topProductionInputs,
+      ].map((row) => row.idProduct),
+    );
+    return FinanceDashboardResponseDto.fromResult(result, covers);
   }
 }

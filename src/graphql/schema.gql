@@ -552,6 +552,7 @@ type TopProductDto {
   productName: String!
   quantitySold: Float!
   revenue: Float!
+  productCoverThumbnailUrl: String
 }
 
 type ProductProfitabilityDto {
@@ -564,6 +565,7 @@ type ProductProfitabilityDto {
   commission: Float!
   netProfit: Float!
   marginPercent: Float!
+  productCoverThumbnailUrl: String
 }
 
 type ProductionInputDto {
@@ -571,6 +573,7 @@ type ProductionInputDto {
   productName: String!
   quantityConsumed: Float!
   cost: Float!
+  productCoverThumbnailUrl: String
 }
 
 type TimeSeriesPointDto {

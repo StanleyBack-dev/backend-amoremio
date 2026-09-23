@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { CatalogModule } from "@/modules/catalog/catalog.module";
 import { StoresModule } from "@/modules/stores/stores.module";
 import { DASHBOARD_REPOSITORY } from "@/modules/finance-dashboard/application/ports/dashboard-repository.port";
 import { GetFinanceDashboardUseCase } from "@/modules/finance-dashboard/application/use-cases/get-finance-dashboard.use-case";
@@ -6,7 +7,7 @@ import { DashboardTypeormRepository } from "@/modules/finance-dashboard/infrastr
 import { FinanceDashboardResolver } from "@/modules/finance-dashboard/presentation/graphql/resolvers/finance-dashboard.resolver";
 
 @Module({
-  imports: [StoresModule],
+  imports: [StoresModule, CatalogModule],
   providers: [
     DashboardTypeormRepository,
     { provide: DASHBOARD_REPOSITORY, useExisting: DashboardTypeormRepository },

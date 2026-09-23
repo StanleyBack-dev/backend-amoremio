@@ -71,6 +71,8 @@ class TopProductDto {
   @Field() productName!: string;
   @Field(() => Float) quantitySold!: number;
   @Field(() => Float) revenue!: number;
+  @Field(() => String, { nullable: true })
+  productCoverThumbnailUrl?: string | null;
 }
 
 @ObjectType()
@@ -84,6 +86,8 @@ class ProductProfitabilityDto {
   @Field(() => Float) commission!: number;
   @Field(() => Float) netProfit!: number;
   @Field(() => Float) marginPercent!: number;
+  @Field(() => String, { nullable: true })
+  productCoverThumbnailUrl?: string | null;
 }
 
 @ObjectType()
@@ -92,6 +96,8 @@ class ProductionInputDto {
   @Field() productName!: string;
   @Field(() => Float) quantityConsumed!: number;
   @Field(() => Float) cost!: number;
+  @Field(() => String, { nullable: true })
+  productCoverThumbnailUrl?: string | null;
 }
 
 @ObjectType()
@@ -103,9 +109,16 @@ class TimeSeriesPointDto {
 
 @ObjectType()
 export class FinanceDashboardResponseDto {
+  // `covers` maps idProduct -> cover thumbnail URL for the product rows.
   static fromResult(
     result: FinanceDashboardResult,
+    covers: Map<string, string> = new Map(),
   ): FinanceDashboardResponseDto {
+    const withCover = <T extends { idProduct: string }>(rows: T[]) =>
+      rows.map((row) => ({
+        ...row,
+        productCoverThumbnailUrl: covers.get(row.idProduct) ?? null,
+      }));
     const dto = new FinanceDashboardResponseDto();
     dto.from = result.from;
     dto.to = result.to;
@@ -113,9 +126,9 @@ export class FinanceDashboardResponseDto {
     dto.stockValue = result.stockValue;
     dto.customersCount = result.customersCount;
     dto.giveawaysCost = result.giveawaysCost;
-    dto.topProducts = result.topProducts;
-    dto.productProfitability = result.productProfitability;
-    dto.topProductionInputs = result.topProductionInputs;
+    dto.topProducts = withCover(result.topProducts);
+    dto.productProfitability = withCover(result.productProfitability);
+    dto.topProductionInputs = withCover(result.topProductionInputs);
     dto.granularity = result.granularity as DashboardGranularityEnum;
     dto.timeSeries = result.timeSeries;
     dto.salesByChannel = result.salesByChannel;
