@@ -130,6 +130,12 @@ export const envValidationSchema = Joi.object({
   AWS_REGION: Joi.string().allow("").optional(),
   AWS_S3_BUCKET: Joi.string().allow("").optional(),
 
+  // === INTERNAL CRON ENDPOINTS ===
+  // Vercel sends it as `Authorization: Bearer <CRON_SECRET>` on scheduled
+  // calls (e.g. /internal/attachments/cleanup-stale-uploads). When unset,
+  // those endpoints reject every request.
+  CRON_SECRET: Joi.string().min(16).allow("").optional(),
+
   // === CHANNEL ORDER INGESTION (webhooks) ===
   // idtb_users of the seeded system/service account used as createdByUserId
   // for everything a channel webhook creates automatically (see

@@ -10,8 +10,12 @@ import { SalesOrderStatus } from "@/modules/sales/domain/enums/sales-order-statu
 
 @ObjectType()
 export class SalesOrderItemResponseDto {
-  static fromView(view: SalesOrderItemView): SalesOrderItemResponseDto {
+  static fromView(
+    view: SalesOrderItemView,
+    coverThumbnailUrl: string | null = null,
+  ): SalesOrderItemResponseDto {
     const dto = new SalesOrderItemResponseDto();
+    dto.productCoverThumbnailUrl = coverThumbnailUrl;
     dto.idSalesOrderItem = view.idSalesOrderItem;
     dto.idProduct = view.idProduct;
     dto.productName = view.productName;
@@ -42,11 +46,19 @@ export class SalesOrderItemResponseDto {
 
   @Field(() => Float)
   lineTotal!: number;
+
+  @Field(() => String, { nullable: true })
+  productCoverThumbnailUrl?: string | null;
 }
 
 @ObjectType()
 export class SalesOrderResponseDto {
-  static fromView(view: SalesOrderView): SalesOrderResponseDto {
+  // `covers` (idProduct -> thumbnail URL) is only passed where the items
+  // are shown with photos; lists omit it.
+  static fromView(
+    view: SalesOrderView,
+    covers?: Map<string, string>,
+  ): SalesOrderResponseDto {
     const dto = new SalesOrderResponseDto();
     dto.idSalesOrder = view.idSalesOrder;
     dto.idStore = view.idStore;
@@ -70,7 +82,7 @@ export class SalesOrderResponseDto {
     dto.createdAt = view.createdAt;
     dto.updatedAt = view.updatedAt;
     dto.items = view.items.map((item) =>
-      SalesOrderItemResponseDto.fromView(item),
+      SalesOrderItemResponseDto.fromView(item, covers?.get(item.idProduct)),
     );
     return dto;
   }

@@ -6,6 +6,8 @@ import {
   buildPaginatedListResponse,
 } from "@/common/responses/helpers/response.helper";
 import type { AuthenticatedUser } from "@/modules/auth/domain/interfaces/auth-token-payload.interface";
+import { ProductCoverService } from "@/modules/catalog/application/services/product-cover.service";
+import type { SalesOrderView } from "@/modules/sales/application/ports/sales-order-repository.port";
 import { SalesOrderCrudUseCases } from "@/modules/sales/application/use-cases/sales-order-crud.use-cases";
 import { ConfirmSalesOrderUseCase } from "@/modules/sales/application/use-cases/confirm-sales-order.use-case";
 import { CancelSalesOrderUseCase } from "@/modules/sales/application/use-cases/cancel-sales-order.use-case";
@@ -34,7 +36,18 @@ export class SalesOrdersResolver {
     private readonly crud: SalesOrderCrudUseCases,
     private readonly confirmSalesOrderUseCase: ConfirmSalesOrderUseCase,
     private readonly cancelSalesOrderUseCase: CancelSalesOrderUseCase,
+    private readonly productCoverService: ProductCoverService,
   ) {}
+
+  // Single-order responses show the items with product photos; the order
+  // list doesn't render items, so it skips this lookup.
+  private async toDetailDto(view: SalesOrderView) {
+    const covers = await this.productCoverService.thumbnailsFor(
+      view.idStore,
+      view.items.map((item) => item.idProduct),
+    );
+    return SalesOrderResponseDto.fromView(view, covers);
+  }
 
   @Query(() => ListSalesOrdersResponseDto, { name: "getStoreSalesOrders" })
   async getStoreSalesOrders(
@@ -72,7 +85,7 @@ export class SalesOrdersResolver {
       input.idStore,
       input.idSalesOrder,
     );
-    return SalesOrderResponseDto.fromView(order);
+    return await this.toDetailDto(order);
   }
 
   @Mutation(() => SalesOrderMutationResponseDto, { name: "createSalesOrder" })
@@ -82,7 +95,7 @@ export class SalesOrdersResolver {
   ) {
     const created = await this.crud.create(user.idUsers, input);
     return buildDataResponse(
-      SalesOrderResponseDto.fromView(created),
+      await this.toDetailDto(created),
       RESPONSE_MESSAGES.sales.created,
     );
   }
@@ -96,7 +109,7 @@ export class SalesOrdersResolver {
   ) {
     const updated = await this.crud.updateHeader(user.idUsers, input);
     return buildDataResponse(
-      SalesOrderResponseDto.fromView(updated),
+      await this.toDetailDto(updated),
       RESPONSE_MESSAGES.sales.updated,
     );
   }
@@ -108,7 +121,7 @@ export class SalesOrdersResolver {
   ) {
     const updated = await this.crud.addItem(user.idUsers, input);
     return buildDataResponse(
-      SalesOrderResponseDto.fromView(updated),
+      await this.toDetailDto(updated),
       RESPONSE_MESSAGES.sales.updated,
     );
   }
@@ -122,7 +135,7 @@ export class SalesOrdersResolver {
   ) {
     const updated = await this.crud.addItems(user.idUsers, input);
     return buildDataResponse(
-      SalesOrderResponseDto.fromView(updated),
+      await this.toDetailDto(updated),
       RESPONSE_MESSAGES.sales.updated,
     );
   }
@@ -136,7 +149,7 @@ export class SalesOrdersResolver {
   ) {
     const updated = await this.crud.updateItem(user.idUsers, input);
     return buildDataResponse(
-      SalesOrderResponseDto.fromView(updated),
+      await this.toDetailDto(updated),
       RESPONSE_MESSAGES.sales.updated,
     );
   }
@@ -155,7 +168,7 @@ export class SalesOrdersResolver {
       input.idSalesOrderItem,
     );
     return buildDataResponse(
-      SalesOrderResponseDto.fromView(updated),
+      await this.toDetailDto(updated),
       RESPONSE_MESSAGES.sales.updated,
     );
   }
@@ -171,7 +184,7 @@ export class SalesOrdersResolver {
       input.idSalesOrder,
     );
     return buildDataResponse(
-      SalesOrderResponseDto.fromView(confirmed),
+      await this.toDetailDto(confirmed),
       RESPONSE_MESSAGES.sales.confirmed,
     );
   }
@@ -187,7 +200,7 @@ export class SalesOrdersResolver {
       input.idSalesOrder,
     );
     return buildDataResponse(
-      SalesOrderResponseDto.fromView(cancelled),
+      await this.toDetailDto(cancelled),
       RESPONSE_MESSAGES.sales.cancelled,
     );
   }

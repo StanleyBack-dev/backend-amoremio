@@ -1,4 +1,5 @@
 import type { AppErrorDefinition } from "@/common/exceptions/app-error-definition.type";
+import { attachmentsErrors } from "@/common/exceptions/catalogs/attachments-errors.catalog";
 import { authErrors } from "@/common/exceptions/catalogs/auth-errors.catalog";
 import { authorizationErrors } from "@/common/exceptions/catalogs/authorization-errors.catalog";
 import { brandsErrors } from "@/common/exceptions/catalogs/brands-errors.catalog";
@@ -22,6 +23,7 @@ import { usersErrors } from "@/common/exceptions/catalogs/users-errors.catalog";
 import { validationErrors } from "@/common/exceptions/catalogs/validation-errors.catalog";
 
 export const APP_ERRORS = {
+  attachments: attachmentsErrors,
   auth: authErrors,
   authorization: authorizationErrors,
   brands: brandsErrors,

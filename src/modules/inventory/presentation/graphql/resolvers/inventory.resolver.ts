@@ -7,6 +7,7 @@ import {
 } from "@/common/responses/helpers/response.helper";
 import { SuccessResponseDto } from "@/common/responses/dtos/success-response.dto";
 import type { AuthenticatedUser } from "@/modules/auth/domain/interfaces/auth-token-payload.interface";
+import { ProductCoverService } from "@/modules/catalog/application/services/product-cover.service";
 import { AdjustStockUseCase } from "@/modules/inventory/application/use-cases/adjust-stock.use-case";
 import { ListStoreStockUseCase } from "@/modules/inventory/application/use-cases/list-store-stock.use-case";
 import { ListStockMovementsUseCase } from "@/modules/inventory/application/use-cases/list-stock-movements.use-case";
@@ -32,6 +33,7 @@ export class InventoryResolver {
     private readonly adjustStockUseCase: AdjustStockUseCase,
     private readonly listStoreStockUseCase: ListStoreStockUseCase,
     private readonly listStockMovementsUseCase: ListStockMovementsUseCase,
+    private readonly productCoverService: ProductCoverService,
   ) {}
 
   @Query(() => ListStoreStockResponseDto, { name: "getStoreStock" })
@@ -53,11 +55,17 @@ export class InventoryResolver {
         limit: input.limit,
       },
     );
+    const covers = await this.productCoverService.thumbnailsFor(
+      input.idStore,
+      result.items.map((item) => item.idProduct),
+    );
     return {
       success: true,
       message: RESPONSE_MESSAGES.inventory.listed.message,
       code: RESPONSE_MESSAGES.inventory.listed.code,
-      items: result.items.map((item) => StockItemResponseDto.fromView(item)),
+      items: result.items.map((item) =>
+        StockItemResponseDto.fromView(item, covers.get(item.idProduct)),
+      ),
       total: result.total,
       currentPage: result.currentPage,
       limit: result.limit,

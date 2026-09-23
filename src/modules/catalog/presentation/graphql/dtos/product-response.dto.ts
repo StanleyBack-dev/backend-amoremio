@@ -1,4 +1,6 @@
 import { Field, Float, ObjectType } from "@nestjs/graphql";
+import type { AttachmentView } from "@/modules/attachments/application/dto/attachment.commands";
+import { AttachmentResponseDto } from "@/modules/attachments/presentation/graphql/dtos/attachment-response.dtos";
 import type { ProductView } from "@/modules/catalog/application/ports/product-repository.port";
 import { PackagingUnit } from "@/modules/catalog/domain/enums/packaging-unit.enum";
 import { ProductKind } from "@/modules/catalog/domain/enums/product-kind.enum";
@@ -6,7 +8,12 @@ import { UnitOfMeasure } from "@/modules/catalog/domain/enums/unit-of-measure.en
 
 @ObjectType()
 export class ProductResponseDto {
-  static fromView(view: ProductView): ProductResponseDto {
+  // `images` is only loaded where the screen needs it: every image on the
+  // detail/update paths, just the cover on lists. Left empty otherwise.
+  static fromView(
+    view: ProductView,
+    images: AttachmentView[] = [],
+  ): ProductResponseDto {
     const dto = new ProductResponseDto();
     dto.idProduct = view.idProduct;
     dto.idStore = view.idStore;
@@ -24,6 +31,8 @@ export class ProductResponseDto {
     dto.createdByUserName = view.createdByUserName;
     dto.createdAt = view.createdAt;
     dto.updatedAt = view.updatedAt;
+    dto.images = images.map((image) => AttachmentResponseDto.fromView(image));
+    dto.coverThumbnailUrl = images[0]?.thumbnailUrl ?? null;
     return dto;
   }
 
@@ -74,4 +83,12 @@ export class ProductResponseDto {
 
   @Field(() => Date)
   updatedAt!: Date;
+
+  @Field(() => [AttachmentResponseDto], {
+    description: "Ordered by position; the first one is the cover.",
+  })
+  images!: AttachmentResponseDto[];
+
+  @Field(() => String, { nullable: true })
+  coverThumbnailUrl?: string | null;
 }

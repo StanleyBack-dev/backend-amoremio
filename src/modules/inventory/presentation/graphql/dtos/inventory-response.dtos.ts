@@ -9,8 +9,12 @@ import { StockMovementType } from "@/modules/inventory/domain/enums/stock-moveme
 
 @ObjectType()
 export class StockItemResponseDto {
-  static fromView(view: StockItemView): StockItemResponseDto {
+  static fromView(
+    view: StockItemView,
+    coverThumbnailUrl: string | null = null,
+  ): StockItemResponseDto {
     const dto = new StockItemResponseDto();
+    dto.productCoverThumbnailUrl = coverThumbnailUrl;
     dto.idProduct = view.idProduct;
     dto.idStore = view.idStore;
     dto.productName = view.productName;
@@ -65,6 +69,9 @@ export class StockItemResponseDto {
 
   @Field(() => Date, { nullable: true })
   updatedAt?: Date | null;
+
+  @Field(() => String, { nullable: true })
+  productCoverThumbnailUrl?: string | null;
 }
 
 @ObjectType()

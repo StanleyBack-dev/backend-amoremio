@@ -5,6 +5,8 @@ import {
   buildDataResponse,
   buildPaginatedListResponse,
 } from "@/common/responses/helpers/response.helper";
+import { ListAttachmentsUseCase } from "@/modules/attachments/application/use-cases/list-attachments.use-case";
+import { AttachmentOwnerType } from "@/modules/attachments/domain/enums/attachment-owner-type.enum";
 import type { AuthenticatedUser } from "@/modules/auth/domain/interfaces/auth-token-payload.interface";
 import { CreateProductUseCase } from "@/modules/catalog/application/use-cases/create-product.use-case";
 import { UpdateProductUseCase } from "@/modules/catalog/application/use-cases/update-product.use-case";
@@ -32,7 +34,23 @@ export class ProductsResolver {
     private readonly updateProductUseCase: UpdateProductUseCase,
     private readonly getProductByIdUseCase: GetProductByIdUseCase,
     private readonly listProductsUseCase: ListProductsUseCase,
+    private readonly listAttachmentsUseCase: ListAttachmentsUseCase,
   ) {}
+
+  // Authorization already happened in the product use case that produced
+  // the ids, so the attachment lookup here is a plain batch read.
+  private productImages(
+    idStore: string,
+    idProducts: string[],
+    options?: { coverOnly?: boolean },
+  ) {
+    return this.listAttachmentsUseCase.forOwners(
+      idStore,
+      AttachmentOwnerType.PRODUCT,
+      idProducts,
+      options,
+    );
+  }
 
   @Query(() => ListProductsResponseDto, { name: "getStoreProducts" })
   async getStoreProducts(
@@ -40,10 +58,17 @@ export class ProductsResolver {
     @Args("input") input: ListProductsInputDto,
   ) {
     const result = await this.listProductsUseCase.execute(user.idUsers, input);
+    const covers = await this.productImages(
+      input.idStore,
+      result.items.map((item) => item.idProduct),
+      { coverOnly: true },
+    );
     return buildPaginatedListResponse(
       {
         ...result,
-        items: result.items.map((item) => ProductResponseDto.fromView(item)),
+        items: result.items.map((item) =>
+          ProductResponseDto.fromView(item, covers.get(item.idProduct)),
+        ),
       },
       RESPONSE_MESSAGES.catalog.listed,
     );
@@ -73,7 +98,8 @@ export class ProductsResolver {
       input.idStore,
       input.idProduct,
     );
-    return ProductResponseDto.fromView(product);
+    const images = await this.productImages(input.idStore, [product.idProduct]);
+    return ProductResponseDto.fromView(product, images.get(product.idProduct));
   }
 
   @Mutation(() => ProductMutationResponseDto, { name: "createProduct" })
@@ -116,8 +142,9 @@ export class ProductsResolver {
       salePrice: input.salePrice,
       status: input.status,
     });
+    const images = await this.productImages(input.idStore, [updated.idProduct]);
     return buildDataResponse(
-      ProductResponseDto.fromView(updated),
+      ProductResponseDto.fromView(updated, images.get(updated.idProduct)),
       RESPONSE_MESSAGES.catalog.updated,
     );
   }
