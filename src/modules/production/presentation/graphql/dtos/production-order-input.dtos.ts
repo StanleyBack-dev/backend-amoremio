@@ -2,6 +2,7 @@ import { Field, Float, InputType, Int } from "@nestjs/graphql";
 import {
   IsEnum,
   IsInt,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsPositive,
@@ -48,6 +49,23 @@ export class ProductionOrderScopeInputDto {
   @Field()
   @IsUUID()
   idProductionOrder!: string;
+}
+
+@InputType()
+export class ReverseProductionOrderInputDto {
+  @Field()
+  @IsUUID()
+  idStore!: string;
+
+  @Field()
+  @IsUUID()
+  idProductionOrder!: string;
+
+  @Field()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  reason!: string;
 }
 
 @InputType()

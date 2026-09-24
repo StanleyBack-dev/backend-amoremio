@@ -380,6 +380,8 @@ enum StockMovementType {
   SAIDA_VENDA
   SAIDA_PRODUCAO
   ENTRADA_PRODUCAO
+  ESTORNO_SAIDA_PRODUCAO
+  ESTORNO_ENTRADA_PRODUCAO
   AJUSTE_POSITIVO
   AJUSTE_NEGATIVO
   PERDA
@@ -686,6 +688,9 @@ type ProductionOrderResponseDto {
   createdByUserId: String!
   createdByUserName: String
   concludedAt: DateTime
+  reversedAt: DateTime
+  reversedByUserName: String
+  reversalReason: String
   createdAt: DateTime!
   updatedAt: DateTime!
   items: [ProductionOrderItemResponseDto!]!
@@ -695,6 +700,7 @@ type ProductionOrderResponseDto {
 enum ProductionOrderStatus {
   RASCUNHO
   CONCLUIDA
+  ESTORNADA
   CANCELADA
 }
 
@@ -1359,6 +1365,7 @@ type Mutation {
   addProductionOrderOutputExtra(input: AddProductionOrderOutputExtraInputDto!): ProductionOrderMutationResponseDto!
   removeProductionOrderOutputExtra(input: RemoveProductionOrderOutputExtraInputDto!): ProductionOrderMutationResponseDto!
   cancelProductionOrder(input: ProductionOrderScopeInputDto!): ProductionOrderMutationResponseDto!
+  reverseProductionOrder(input: ReverseProductionOrderInputDto!): ProductionOrderMutationResponseDto!
   syncProductionOrderWithRecipe(input: ProductionOrderScopeInputDto!): ProductionOrderMutationResponseDto!
   acceptTermsOfUse: LogoutResponseDto!
 }
@@ -1840,4 +1847,10 @@ input RemoveProductionOrderOutputExtraInputDto {
   idProductionOrder: String!
   idProductionOrderOutput: String!
   idProductionOrderOutputExtra: String!
+}
+
+input ReverseProductionOrderInputDto {
+  idStore: String!
+  idProductionOrder: String!
+  reason: String!
 }

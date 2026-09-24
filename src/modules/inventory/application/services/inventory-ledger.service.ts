@@ -13,6 +13,7 @@ import {
   type PersistStockMovementInput,
 } from "@/modules/inventory/application/ports/inventory-repository.port";
 import {
+  STOCK_COST_REVERSAL_TYPES,
   STOCK_INBOUND_TYPES,
   StockMovementType,
 } from "@/modules/inventory/domain/enums/stock-movement-type.enum";
@@ -24,7 +25,8 @@ export interface RegisterMovementInput {
   type: StockMovementType;
   quantity: number;
   // Required for inbound movements. If omitted on an AJUSTE_POSITIVO the
-  // current average cost is used.
+  // current average cost is used. Also required for cost-reversal exits
+  // (STOCK_COST_REVERSAL_TYPES): the cost the undone entry came in at.
   unitCost?: number;
   sourceType?: string | null;
   sourceId?: string | null;
@@ -62,14 +64,10 @@ export class InventoryLedgerService {
       input.idProduct,
     )) ?? { quantityOnHand: 0, averageCost: 0 };
 
-    const isInbound = STOCK_INBOUND_TYPES.includes(input.type);
-    // Inbound: the cost being brought in (drives the weighted average).
-    // Outbound: the average cost at the time it leaves, recorded on the
-    // movement so downstream reporting (COGS) can read it back without
-    // re-deriving it. It does not affect the stored average either way.
-    const unitCost = isInbound
-      ? UnitCost.fromNumber(input.unitCost ?? current.averageCost)
-      : UnitCost.fromNumber(current.averageCost);
+    const unitCost = InventoryLedgerService.resolveUnitCost(
+      input,
+      current.averageCost,
+    );
 
     const result = StockLedgerService.apply(
       {
@@ -141,10 +139,10 @@ export class InventoryLedgerService {
 
     const rows: PersistStockMovementInput[] = inputs.map((input) => {
       const current = state.get(input.idProduct)!;
-      const isInbound = STOCK_INBOUND_TYPES.includes(input.type);
-      const unitCost = isInbound
-        ? UnitCost.fromNumber(input.unitCost ?? current.averageCost)
-        : UnitCost.fromNumber(current.averageCost);
+      const unitCost = InventoryLedgerService.resolveUnitCost(
+        input,
+        current.averageCost,
+      );
 
       const result = StockLedgerService.apply(
         {
@@ -178,5 +176,24 @@ export class InventoryLedgerService {
     });
 
     await this.inventoryRepository.persistMovementsBatch(rows);
+  }
+
+  // Inbound: the cost being brought in (drives the weighted average).
+  // Cost-reversal exit: the cost the undone entry came in at (takes that
+  // value back out of the average). Any other outbound: the average cost at
+  // the time it leaves, recorded on the movement so downstream reporting
+  // (COGS) can read it back without re-deriving it.
+  private static resolveUnitCost(
+    input: RegisterMovementInput,
+    currentAverageCost: number,
+  ): UnitCost {
+    const carriesOwnCost =
+      STOCK_INBOUND_TYPES.includes(input.type) ||
+      STOCK_COST_REVERSAL_TYPES.includes(input.type);
+    return UnitCost.fromNumber(
+      carriesOwnCost
+        ? (input.unitCost ?? currentAverageCost)
+        : currentAverageCost,
+    );
   }
 }

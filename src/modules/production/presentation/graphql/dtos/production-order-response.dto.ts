@@ -139,6 +139,9 @@ export class ProductionOrderResponseDto {
     dto.createdByUserId = view.createdByUserId;
     dto.createdByUserName = view.createdByUserName;
     dto.concludedAt = view.concludedAt;
+    dto.reversedAt = view.reversedAt;
+    dto.reversedByUserName = view.reversedByUserName;
+    dto.reversalReason = view.reversalReason;
     dto.createdAt = view.createdAt;
     dto.updatedAt = view.updatedAt;
     dto.items = view.items.map((item) =>
@@ -209,6 +212,15 @@ export class ProductionOrderResponseDto {
 
   @Field(() => Date, { nullable: true })
   concludedAt?: Date | null;
+
+  @Field(() => Date, { nullable: true })
+  reversedAt?: Date | null;
+
+  @Field(() => String, { nullable: true })
+  reversedByUserName?: string | null;
+
+  @Field(() => String, { nullable: true })
+  reversalReason?: string | null;
 
   @Field(() => Date)
   createdAt!: Date;

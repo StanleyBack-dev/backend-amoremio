@@ -49,6 +49,10 @@ export type ProductionOrderView = {
   createdByUserId: string;
   createdByUserName: string | null;
   concludedAt: Date | null;
+  reversedAt: Date | null;
+  reversedByUserId: string | null;
+  reversedByUserName: string | null;
+  reversalReason: string | null;
   createdAt: Date;
   updatedAt: Date;
   items: ProductionOrderItemView[];
@@ -119,6 +123,13 @@ export type CompleteProductionOrderPayload = {
       lineCost: number;
     }[];
   }[];
+};
+
+export type ReverseProductionOrderPayload = {
+  idProductionOrder: string;
+  reversedAt: Date;
+  reversedByUserId: string;
+  reversalReason: string;
 };
 
 // Recreates a whole order (items + outputs + extras) as a new draft in a
@@ -206,6 +217,13 @@ export interface ProductionOrderRepositoryPort {
   completeOrder(
     payload: CompleteProductionOrderPayload,
   ): Promise<ProductionOrderView>;
+  // CONCLUIDA -> ESTORNADA as a single conditional update. Returns false when
+  // the order was no longer CONCLUIDA (e.g. a concurrent reversal won), so
+  // the caller never undoes the same stock twice.
+  markOrderReversed(payload: ReverseProductionOrderPayload): Promise<boolean>;
+  // Compensation for markOrderReversed when the stock movements fail: puts
+  // the order back to CONCLUIDA and clears the reversal fields.
+  undoOrderReversal(idProductionOrder: string): Promise<void>;
 
   addOutput(
     payload: AddProductionOrderOutputPayload,

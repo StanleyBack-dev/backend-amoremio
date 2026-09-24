@@ -52,14 +52,19 @@ export class DashboardTypeormRepository implements DashboardRepositoryPort {
       [period.idStore, StockMovementType.SAIDA_VENDA, period.from, period.to],
     );
 
+    // Inputs returned by a reversed production order (booked on the same
+    // production date) net out of what was consumed.
     const production = await this.dataSource.query(
-      `SELECT COALESCE(SUM(quantity * unit_cost), 0) AS cost
+      `SELECT COALESCE(SUM(
+                CASE WHEN type = $2 THEN quantity * unit_cost
+                     ELSE -quantity * unit_cost END), 0) AS cost
          FROM tb_stock_movements
-        WHERE idtb_stores = $1 AND type = $2
-          AND occurred_at BETWEEN $3 AND $4`,
+        WHERE idtb_stores = $1 AND type IN ($2, $3)
+          AND occurred_at BETWEEN $4 AND $5`,
       [
         period.idStore,
         StockMovementType.SAIDA_PRODUCAO,
+        StockMovementType.ESTORNO_SAIDA_PRODUCAO,
         period.from,
         period.to,
       ],
@@ -95,18 +100,24 @@ export class DashboardTypeormRepository implements DashboardRepositoryPort {
     const rows = await this.dataSource.query(
       `SELECT m.idtb_products AS id_product,
               p.name AS product_name,
-              COALESCE(SUM(m.quantity), 0) AS quantity_consumed,
-              COALESCE(SUM(m.quantity * m.unit_cost), 0) AS cost
+              COALESCE(SUM(CASE WHEN m.type = $2 THEN m.quantity
+                                ELSE -m.quantity END), 0) AS quantity_consumed,
+              COALESCE(SUM(CASE WHEN m.type = $2 THEN m.quantity * m.unit_cost
+                                ELSE -m.quantity * m.unit_cost END), 0) AS cost
          FROM tb_stock_movements m
          JOIN tb_products p ON p.idtb_products = m.idtb_products
-        WHERE m.idtb_stores = $1 AND m.type = $2
-          AND m.occurred_at BETWEEN $3 AND $4
+        WHERE m.idtb_stores = $1 AND m.type IN ($2, $3)
+          AND m.occurred_at BETWEEN $4 AND $5
         GROUP BY m.idtb_products, p.name
+       -- A fully reversed input nets to zero and drops off the ranking.
+       HAVING SUM(CASE WHEN m.type = $2 THEN m.quantity
+                       ELSE -m.quantity END) > 0
         ORDER BY cost DESC
-        LIMIT $5`,
+        LIMIT $6`,
       [
         period.idStore,
         StockMovementType.SAIDA_PRODUCAO,
+        StockMovementType.ESTORNO_SAIDA_PRODUCAO,
         period.from,
         period.to,
         limit,

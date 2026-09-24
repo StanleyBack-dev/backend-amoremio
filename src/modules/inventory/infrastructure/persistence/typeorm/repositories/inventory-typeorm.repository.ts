@@ -292,6 +292,11 @@ export class InventoryTypeormRepository implements InventoryRepositoryPort {
         sourceId: filters.sourceId,
       });
     }
+    if (filters?.sourceType) {
+      query.andWhere("movement.sourceType = :sourceType", {
+        sourceType: filters.sourceType,
+      });
+    }
 
     const page = filters?.page && filters.page > 0 ? filters.page : 1;
     const limit = filters?.limit && filters.limit > 0 ? filters.limit : 15;
