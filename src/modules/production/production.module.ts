@@ -8,6 +8,7 @@ import { PRODUCTION_ORDER_REPOSITORY } from "@/modules/production/application/po
 import { RecipeCrudUseCases } from "@/modules/production/application/use-cases/recipe-crud.use-cases";
 import { ProductionOrderCrudUseCases } from "@/modules/production/application/use-cases/production-order-crud.use-cases";
 import { CompleteProductionOrderUseCase } from "@/modules/production/application/use-cases/complete-production-order.use-case";
+import { ReverseProductionOrderUseCase } from "@/modules/production/application/use-cases/reverse-production-order.use-case";
 import { RecipeEntity } from "@/modules/production/infrastructure/persistence/typeorm/entities/recipe.entity";
 import { RecipeItemEntity } from "@/modules/production/infrastructure/persistence/typeorm/entities/recipe-item.entity";
 import { ProductionOrderEntity } from "@/modules/production/infrastructure/persistence/typeorm/entities/production-order.entity";
@@ -42,6 +43,7 @@ import "@/modules/production/presentation/graphql/enums/production-graphql.enums
     RecipeCrudUseCases,
     ProductionOrderCrudUseCases,
     CompleteProductionOrderUseCase,
+    ReverseProductionOrderUseCase,
     ProductionResolver,
   ],
 })

@@ -175,4 +175,30 @@ describe("InventoryLedgerService.registerMovements", () => {
     ).rejects.toBeInstanceOf(AppException);
     expect(inventoryRepository.persistMovementsBatch).not.toHaveBeenCalled();
   });
+
+  it("records a cost-reversal exit at the given cost, not the current average", async () => {
+    const { service, inventoryRepository } = build({
+      stockById: { "p-1": { quantityOnHand: 5, averageCost: 3.35318 } },
+    });
+
+    await service.registerMovements([
+      {
+        idStore: "s-1",
+        idProduct: "p-1",
+        type: StockMovementType.ESTORNO_ENTRADA_PRODUCAO,
+        quantity: 2,
+        unitCost: 4.19135,
+        createdByUserId: "u-1",
+      },
+    ]);
+
+    const [row] = inventoryRepository.persistMovementsBatch.mock.calls[0][0];
+    expect(row).toEqual(
+      expect.objectContaining({
+        unitCost: 4.19135,
+        resultingQuantity: 3,
+        resultingAverageCost: 2.7944,
+      }),
+    );
+  });
 });

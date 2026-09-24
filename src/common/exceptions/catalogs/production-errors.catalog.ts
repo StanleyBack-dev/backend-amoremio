@@ -86,7 +86,29 @@ export const productionErrors = {
     code: "PRODUCTION_ORDER_CANNOT_CANCEL_CONCLUDED",
     status: HttpStatus.CONFLICT,
     message:
-      "Uma ordem de produção concluída não pode ser cancelada — ajuste o estoque manualmente se necessário.",
+      'Uma ordem de produção concluída não pode ser cancelada — use "Estornar" para desfazer a produção.',
+  },
+  cannotReverseNotConcluded: {
+    code: "PRODUCTION_ORDER_CANNOT_REVERSE_NOT_CONCLUDED",
+    status: HttpStatus.CONFLICT,
+    message:
+      "Só é possível estornar uma ordem de produção concluída — rascunhos podem ser cancelados.",
+  },
+  alreadyReversed: {
+    code: "PRODUCTION_ORDER_ALREADY_REVERSED",
+    status: HttpStatus.CONFLICT,
+    message: "Esta ordem de produção já foi estornada.",
+  },
+  reversalReasonRequired: {
+    code: "PRODUCTION_REVERSAL_REASON_REQUIRED",
+    status: HttpStatus.BAD_REQUEST,
+    message: "Informe o motivo do estorno.",
+  },
+  reversalInsufficientStock: {
+    code: "PRODUCTION_REVERSAL_INSUFFICIENT_STOCK",
+    status: HttpStatus.CONFLICT,
+    message: ({ product }: { product: string }) =>
+      `Não há estoque suficiente de "${product}" para estornar — parte do que foi produzido já saiu (venda, perda ou ajuste).`,
   },
   recipeInactive: {
     code: "PRODUCTION_RECIPE_INACTIVE",

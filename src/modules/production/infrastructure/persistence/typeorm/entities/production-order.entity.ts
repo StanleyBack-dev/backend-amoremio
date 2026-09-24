@@ -120,6 +120,16 @@ export class ProductionOrderEntity {
   @Column({ name: "concluded_at", type: "timestamptz", nullable: true })
   concludedAt?: Date | null;
 
+  // Set when a completed order is reversed (status ESTORNADA).
+  @Column({ name: "reversed_at", type: "timestamptz", nullable: true })
+  reversedAt?: Date | null;
+
+  @Column({ name: "reversed_by_user_id", type: "uuid", nullable: true })
+  reversedByUserId?: string | null;
+
+  @Column({ name: "reversal_reason", type: "text", nullable: true })
+  reversalReason?: string | null;
+
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt!: Date;
 

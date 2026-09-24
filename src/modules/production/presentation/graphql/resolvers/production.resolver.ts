@@ -11,6 +11,7 @@ import type { AuthenticatedUser } from "@/modules/auth/domain/interfaces/auth-to
 import { RecipeCrudUseCases } from "@/modules/production/application/use-cases/recipe-crud.use-cases";
 import { ProductionOrderCrudUseCases } from "@/modules/production/application/use-cases/production-order-crud.use-cases";
 import { CompleteProductionOrderUseCase } from "@/modules/production/application/use-cases/complete-production-order.use-case";
+import { ReverseProductionOrderUseCase } from "@/modules/production/application/use-cases/reverse-production-order.use-case";
 import { RecipeResponseDto } from "@/modules/production/presentation/graphql/dtos/recipe-response.dto";
 import { ProductionOrderResponseDto } from "@/modules/production/presentation/graphql/dtos/production-order-response.dto";
 import { ProductionOrderFilterOptionsDto } from "@/modules/production/presentation/graphql/dtos/production-filter-options.dto";
@@ -41,6 +42,7 @@ import {
   RemoveProductionOrderItemInputDto,
   RemoveProductionOrderOutputExtraInputDto,
   RemoveProductionOrderOutputInputDto,
+  ReverseProductionOrderInputDto,
   UpdateProductionOrderInputDto,
 } from "@/modules/production/presentation/graphql/dtos/production-order-input.dtos";
 import "@/modules/production/presentation/graphql/enums/production-graphql.enums";
@@ -51,6 +53,7 @@ export class ProductionResolver {
     private readonly recipeCrud: RecipeCrudUseCases,
     private readonly orderCrud: ProductionOrderCrudUseCases,
     private readonly completeProductionOrderUseCase: CompleteProductionOrderUseCase,
+    private readonly reverseProductionOrderUseCase: ReverseProductionOrderUseCase,
   ) {}
 
   // --- Recipes ---------------------------------------------------------
@@ -415,6 +418,25 @@ export class ProductionResolver {
     return buildDataResponse(
       ProductionOrderResponseDto.fromView(cancelled),
       RESPONSE_MESSAGES.production.orderCancelled,
+    );
+  }
+
+  @Mutation(() => ProductionOrderMutationResponseDto, {
+    name: "reverseProductionOrder",
+  })
+  async reverseProductionOrder(
+    @CurrentUser() user: AuthenticatedUser,
+    @Args("input") input: ReverseProductionOrderInputDto,
+  ) {
+    const reversed = await this.reverseProductionOrderUseCase.execute(
+      user.idUsers,
+      input.idStore,
+      input.idProductionOrder,
+      input.reason,
+    );
+    return buildDataResponse(
+      ProductionOrderResponseDto.fromView(reversed),
+      RESPONSE_MESSAGES.production.orderReversed,
     );
   }
 

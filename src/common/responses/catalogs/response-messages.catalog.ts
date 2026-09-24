@@ -217,6 +217,10 @@ export const RESPONSE_MESSAGES = {
       code: "PRODUCTION_ORDER_CANCELLED",
       message: "Ordem de produção cancelada.",
     },
+    orderReversed: {
+      code: "PRODUCTION_ORDER_REVERSED",
+      message: "Produção estornada — estoque revertido.",
+    },
     ordersListed: {
       code: "PRODUCTION_ORDERS_LISTED",
       message: "Ordens de produção carregadas com sucesso.",

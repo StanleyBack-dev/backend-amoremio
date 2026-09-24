@@ -29,6 +29,7 @@ import {
   type ProductionOrderOutputView,
   type ProductionOrderRepositoryPort,
   type ProductionOrderView,
+  type ReverseProductionOrderPayload,
   type UpdateProductionOrderPayload,
 } from "@/modules/production/application/ports/production-order-repository.port";
 import { ProductionOrderStatus } from "@/modules/production/domain/enums/production-order-status.enum";
@@ -403,6 +404,36 @@ export class ProductionTypeormRepository
     return this.loadOrderView(payload.idProductionOrder);
   }
 
+  async markOrderReversed(
+    payload: ReverseProductionOrderPayload,
+  ): Promise<boolean> {
+    const result = await this.orderRepository.update(
+      {
+        idProductionOrder: payload.idProductionOrder,
+        status: ProductionOrderStatus.CONCLUIDA,
+      },
+      {
+        status: ProductionOrderStatus.ESTORNADA,
+        reversedAt: payload.reversedAt,
+        reversedByUserId: payload.reversedByUserId,
+        reversalReason: payload.reversalReason,
+      },
+    );
+    return (result.affected ?? 0) > 0;
+  }
+
+  async undoOrderReversal(idProductionOrder: string): Promise<void> {
+    await this.orderRepository.update(
+      { idProductionOrder, status: ProductionOrderStatus.ESTORNADA },
+      {
+        status: ProductionOrderStatus.CONCLUIDA,
+        reversedAt: null,
+        reversedByUserId: null,
+        reversalReason: null,
+      },
+    );
+  }
+
   async addOutput(
     payload: AddProductionOrderOutputPayload,
   ): Promise<ProductionOrderView> {
@@ -534,7 +565,9 @@ export class ProductionTypeormRepository
         order: { createdAt: "ASC" },
       }),
       this.loadOutputsForOrders(idProductionOrders),
-      this.resolveCreatorNames(rows.map((row) => row.createdByUserId)),
+      this.resolveCreatorNames(
+        rows.flatMap((row) => [row.createdByUserId, row.reversedByUserId]),
+      ),
     ]);
     const itemsByOrder = groupBy(items, (item) => item.idProductionOrder);
 
@@ -544,7 +577,7 @@ export class ProductionTypeormRepository
           row,
           itemsByOrder.get(row.idProductionOrder) ?? [],
           outputs.get(row.idProductionOrder) ?? [],
-          creatorNames.get(row.createdByUserId) ?? null,
+          creatorNames,
         ),
       ),
       total,
@@ -685,15 +718,15 @@ export class ProductionTypeormRepository
       }),
       this.loadOutputsForOrders([idProductionOrder]),
     ]);
-    const creatorName =
-      (await this.resolveCreatorNames([order.createdByUserId])).get(
-        order.createdByUserId,
-      ) ?? null;
+    const userNames = await this.resolveCreatorNames([
+      order.createdByUserId,
+      order.reversedByUserId,
+    ]);
     return this.mapOrderView(
       order,
       items,
       outputsByOrder.get(idProductionOrder) ?? [],
-      creatorName,
+      userNames,
     );
   }
 
@@ -801,7 +834,7 @@ export class ProductionTypeormRepository
     entity: ProductionOrderEntity,
     items: ProductionOrderItemEntity[],
     outputs: ProductionOrderOutputView[],
-    creatorName: string | null,
+    userNames: Map<string, string>,
   ): ProductionOrderView {
     return {
       idProductionOrder: entity.idProductionOrder,
@@ -822,8 +855,14 @@ export class ProductionTypeormRepository
       outputUnitCost: Number(entity.outputUnitCost),
       notes: entity.notes ?? null,
       createdByUserId: entity.createdByUserId,
-      createdByUserName: creatorName,
+      createdByUserName: userNames.get(entity.createdByUserId) ?? null,
       concludedAt: entity.concludedAt ?? null,
+      reversedAt: entity.reversedAt ?? null,
+      reversedByUserId: entity.reversedByUserId ?? null,
+      reversedByUserName: entity.reversedByUserId
+        ? (userNames.get(entity.reversedByUserId) ?? null)
+        : null,
+      reversalReason: entity.reversalReason ?? null,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       items: items.map((item) => this.mapOrderItemView(item)),
